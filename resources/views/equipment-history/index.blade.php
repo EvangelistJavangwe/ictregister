@@ -8,23 +8,18 @@
 
 <div class="card">
     <div class="card-body">
-        <form method="GET" class="d-flex gap-3 flex-wrap align-center" id="search-form">
-            <div class="form-group" style="margin:0;min-width:200px;">
-                <label class="form-label">Search By</label>
-                <select name="type" id="search-type" class="form-control" onchange="updateSearchField()">
-                    <option value="serial_number" {{ request('type','serial_number') === 'serial_number' ? 'selected' : '' }}>Serial Number</option>
-                    <option value="asset_tag"     {{ request('type') === 'asset_tag' ? 'selected' : '' }}>Asset Tag</option>
-                </select>
-            </div>
-            <div class="form-group" style="margin:0;flex:2;min-width:280px;">
-                <label class="form-label" id="identifier-label">Serial Number</label>
+        <form method="GET" class="d-flex gap-3 flex-wrap align-center" id="search-form" autocomplete="off">
+            <div class="form-group" style="margin:0;flex:2;min-width:320px;position:relative;">
+                <label class="form-label">Search Equipment</label>
+                <input type="hidden" name="type" id="search-type" value="{{ request('type', 'auto') }}">
                 <input type="text"
                     name="identifier"
                     id="identifier-input"
                     class="form-control"
                     value="{{ request('identifier') }}"
-                    placeholder="Enter serial number..."
+                    placeholder="Type a serial number, asset tag, item name, brand, or recipient..."
                     autocomplete="off">
+                <div id="suggest-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;z-index:20;background:#fff;border:1px solid #e2e8f0;border-radius:8px;margin-top:4px;max-height:320px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,.08);"></div>
             </div>
             <div style="align-self:flex-end;">
                 <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i> Track Equipment</button>
@@ -33,8 +28,32 @@
                 @endif
             </div>
         </form>
+
+        <hr class="divider">
+
+        <form method="POST" action="{{ route('equipment-history.ask') }}" class="d-flex gap-3 flex-wrap align-center">
+            @csrf
+            <div class="form-group" style="margin:0;flex:2;min-width:320px;">
+                <label class="form-label"><i class="fas fa-wand-magic-sparkles"></i> Ask AI</label>
+                <input type="text" name="query" class="form-control"
+                    placeholder="e.g. &quot;who has the HP laptop with serial ABC123?&quot;">
+            </div>
+            <div style="align-self:flex-end;">
+                <button type="submit" class="btn btn-secondary"><i class="fas fa-sparkles"></i> Ask</button>
+            </div>
+        </form>
     </div>
 </div>
+
+@if(session('ai_summary'))
+<div class="alert alert-info mt-2">
+    <i class="fas fa-wand-magic-sparkles"></i> <strong>AI Summary:</strong> {{ session('ai_summary') }}
+</div>
+@elseif(session('ai_summary_unavailable'))
+<div class="alert alert-warning mt-2">
+    <i class="fas fa-exclamation-triangle"></i> Found the equipment below, but an AI summary isn't available right now.
+</div>
+@endif
 
 @if($searchValue !== null)
 <div class="card mt-2">
@@ -44,6 +63,10 @@
                 <i class="fas fa-tag" style="color:#2563eb;"></i>
                 Asset Tag: <strong>{{ $searchValue }}</strong>
                 <span class="badge badge-info">Asset Tag</span>
+            @elseif($searchType === 'cross_ref_no')
+                <i class="fas fa-hashtag" style="color:#2563eb;"></i>
+                Reference No: <strong>{{ $searchValue }}</strong>
+                <span class="badge badge-info">Cross Ref No</span>
             @else
                 <i class="fas fa-barcode" style="color:#2563eb;"></i>
                 Serial Number: <strong>{{ $searchValue }}</strong>
@@ -263,20 +286,68 @@
 
 @push('scripts')
 <script>
-const labels = {
-    serial_number: { label: 'Serial Number', placeholder: 'Enter serial number...' },
-    asset_tag:     { label: 'Asset Tag',     placeholder: 'Enter asset tag number...' },
-};
+(function() {
+    const input    = document.getElementById('identifier-input');
+    const typeField= document.getElementById('search-type');
+    const dropdown = document.getElementById('suggest-dropdown');
+    let debounceId = null;
+    let lastQuery  = '';
 
-function updateSearchField() {
-    const type = document.getElementById('search-type').value;
-    const cfg  = labels[type] || labels.serial_number;
-    document.getElementById('identifier-label').textContent  = cfg.label;
-    document.getElementById('identifier-input').placeholder  = cfg.placeholder;
-}
+    function hideDropdown() {
+        dropdown.style.display = 'none';
+        dropdown.innerHTML = '';
+    }
 
-// Run on page load to match current selection
-updateSearchField();
+    function renderResults(results) {
+        if (!results.length) {
+            dropdown.innerHTML = '<div class="text-sm text-muted" style="padding:10px 14px;">No matches found</div>';
+            dropdown.style.display = 'block';
+            return;
+        }
+        dropdown.innerHTML = results.map(r => `
+            <div class="suggest-item" data-type="${r.identifier_type}" data-value="${r.identifier_value.replace(/"/g, '&quot;')}"
+                 style="padding:8px 14px;cursor:pointer;border-bottom:1px solid #f1f5f9;">
+                <div style="font-weight:600;font-size:.85rem;color:#1e293b;">${r.label}</div>
+                <div class="text-sm text-muted">${r.meta ?? ''}</div>
+            </div>
+        `).join('');
+        dropdown.style.display = 'block';
+
+        dropdown.querySelectorAll('.suggest-item').forEach(el => {
+            el.addEventListener('mouseenter', () => el.style.background = '#f8fafc');
+            el.addEventListener('mouseleave', () => el.style.background = '#fff');
+            el.addEventListener('click', () => {
+                typeField.value = el.dataset.type;
+                input.value = el.dataset.value;
+                hideDropdown();
+                document.getElementById('search-form').submit();
+            });
+        });
+    }
+
+    input.addEventListener('input', function() {
+        typeField.value = 'auto';
+        const q = input.value.trim();
+        clearTimeout(debounceId);
+        if (q.length < 2) {
+            hideDropdown();
+            return;
+        }
+        debounceId = setTimeout(() => {
+            lastQuery = q;
+            fetch(`{{ route('equipment-history.suggest') }}?q=` + encodeURIComponent(q))
+                .then(res => res.json())
+                .then(data => {
+                    if (q === lastQuery) renderResults(data.results || []);
+                })
+                .catch(() => hideDropdown());
+        }, 300);
+    });
+
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('#suggest-dropdown') && e.target !== input) hideDropdown();
+    });
+})();
 </script>
 @endpush
 @endsection

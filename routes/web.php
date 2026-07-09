@@ -89,6 +89,8 @@ Route::middleware(['auth', 'mfa', 'force.password'])->group(function () {
 
     // Equipment History — hod, super_admin
     Route::get('equipment-history', [EquipmentHistoryController::class, 'index'])->name('equipment-history.index')->middleware('role:super_admin,hod');
+    Route::get('equipment-history/suggest', [EquipmentHistoryController::class, 'suggest'])->name('equipment-history.suggest')->middleware('role:super_admin,hod');
+    Route::post('equipment-history/ask', [EquipmentHistoryController::class, 'ask'])->name('equipment-history.ask')->middleware('role:super_admin,hod');
 
     // Database Backup — super_admin only
     Route::middleware('role:super_admin')->group(function () {

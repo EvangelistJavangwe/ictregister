@@ -35,6 +35,11 @@ return [
         ],
     ],
 
+    'anthropic' => [
+        'key'   => env('ANTHROPIC_API_KEY'),
+        'model' => env('ANTHROPIC_MODEL', 'claude-haiku-4-5'),
+    ],
+
     'sharepoint' => [
         'tenant_id'     => env('SHAREPOINT_TENANT_ID'),
         'client_id'     => env('SHAREPOINT_CLIENT_ID'),
