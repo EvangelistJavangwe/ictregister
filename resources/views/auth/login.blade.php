@@ -27,4 +27,10 @@
     </div>
     <button type="submit" class="btn btn-primary"><i class="fas fa-sign-in-alt"></i> &nbsp;Sign In</button>
 </form>
+
+<div class="auth-divider"><span>or</span></div>
+
+<a href="{{ route('auth.microsoft.redirect') }}" class="btn btn-microsoft">
+    <i class="fa-brands fa-microsoft"></i> &nbsp;Sign in with Microsoft
+</a>
 @endsection

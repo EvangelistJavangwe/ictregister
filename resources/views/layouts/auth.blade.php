@@ -31,6 +31,10 @@
         .btn-primary:hover { background: #1d4ed8; }
         .btn-primary:active { background: #1e40af; transform: scale(0.98); }
         .btn-primary:disabled { background: #93c5fd; cursor: not-allowed; }
+        .btn-microsoft { display: flex; align-items: center; justify-content: center; background: #fff; color: #1e293b; border: 1px solid #d1d5db; text-decoration: none; }
+        .btn-microsoft:hover { background: #f8fafc; border-color: #9ca3af; }
+        .auth-divider { display: flex; align-items: center; gap: 12px; margin: 18px 0; color: #9ca3af; font-size: .78rem; text-transform: uppercase; letter-spacing: .04em; }
+        .auth-divider::before, .auth-divider::after { content: ''; flex: 1; height: 1px; background: #e5e7eb; }
         .alert { padding: 10px 14px; border-radius: 8px; margin-bottom: 14px; font-size: .85rem; }
         .alert-danger { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
         .alert-success { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }

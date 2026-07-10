@@ -5,10 +5,12 @@ namespace App\Http\Controllers;
 use App\Models\AuditTrail;
 use App\Models\OtpToken;
 use App\Models\User;
+use App\Services\MicrosoftSsoService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
 use BaconQrCode\Renderer\Image\SvgImageBackEnd;
 use BaconQrCode\Renderer\ImageRenderer;
@@ -54,6 +56,74 @@ class AuthController extends Controller
         }
 
         session(['mfa_verified' => true]);
+
+        return redirect()->intended(route('dashboard'));
+    }
+
+    public function redirectToMicrosoft(MicrosoftSsoService $sso)
+    {
+        $state = Str::random(40);
+        session(['sso_state' => $state]);
+
+        return redirect()->away($sso->getAuthorizationUrl($state));
+    }
+
+    public function handleMicrosoftCallback(Request $request, MicrosoftSsoService $sso)
+    {
+        $expectedState = session()->pull('sso_state');
+
+        if ($request->filled('error')) {
+            AuditTrail::log('sso_login_failed', 'Auth', "Microsoft sign-in returned an error: {$request->query('error_description', $request->query('error'))}", 'failed');
+            return redirect()->route('login')->withErrors(['username' => 'Microsoft sign-in was cancelled or failed.']);
+        }
+
+        if (!$request->filled('state') || !$expectedState || !hash_equals($expectedState, $request->query('state'))) {
+            AuditTrail::log('sso_login_failed', 'Auth', 'Microsoft sign-in state mismatch', 'failed');
+            return redirect()->route('login')->withErrors(['username' => 'Microsoft sign-in session expired. Please try again.']);
+        }
+
+        if (!$request->filled('code')) {
+            return redirect()->route('login')->withErrors(['username' => 'Microsoft sign-in failed.']);
+        }
+
+        $token = $sso->exchangeCodeForToken($request->query('code'));
+        if (!$token || empty($token['access_token'])) {
+            AuditTrail::log('sso_login_failed', 'Auth', 'Microsoft token exchange failed', 'failed');
+            return redirect()->route('login')->withErrors(['username' => 'Microsoft sign-in failed. Please try again.']);
+        }
+
+        $profile = $sso->getUserProfile($token['access_token']);
+        if (!$profile) {
+            AuditTrail::log('sso_login_failed', 'Auth', 'Microsoft profile lookup failed', 'failed');
+            return redirect()->route('login')->withErrors(['username' => 'Microsoft sign-in failed. Please try again.']);
+        }
+
+        $resolved = $sso->resolveLocalUser($profile);
+
+        if ($resolved['status'] === 'wrong_domain') {
+            AuditTrail::log('sso_login_denied', 'Auth', "Microsoft sign-in denied — domain not allowed: {$resolved['email']}", 'warning');
+            return redirect()->route('login')->withErrors(['username' => 'Microsoft sign-in is only available for gmbdura.co.zw accounts.']);
+        }
+
+        if ($resolved['status'] === 'not_found') {
+            AuditTrail::log('sso_login_denied', 'Auth', "Microsoft sign-in denied — no matching account: {$resolved['email']}", 'warning');
+            return redirect()->route('login')->withErrors(['username' => "No matching account found for {$resolved['email']}. Contact your administrator."]);
+        }
+
+        if ($resolved['status'] === 'blocked') {
+            AuditTrail::log('sso_login_denied', 'Auth', "Microsoft sign-in denied — account blocked: {$resolved['user']->username}", 'warning');
+            return redirect()->route('login')->withErrors(['username' => 'Your account has been blocked. Contact your administrator.']);
+        }
+
+        return $this->completeSsoLogin($resolved['user']);
+    }
+
+    private function completeSsoLogin(User $user)
+    {
+        Auth::login($user);
+        session(['mfa_verified' => true]);
+
+        AuditTrail::log('sso_login', 'Auth', "User {$user->username} signed in via Microsoft", 'success');
 
         return redirect()->intended(route('dashboard'));
     }

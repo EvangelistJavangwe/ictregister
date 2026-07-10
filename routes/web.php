@@ -23,6 +23,9 @@ Route::middleware('guest')->group(function () {
     Route::post('/forgot-password', [AuthController::class, 'sendOtp'])->name('password.send-otp');
     Route::get('/reset-password', [AuthController::class, 'showResetWithOtp'])->name('password.reset.otp');
     Route::post('/reset-password', [AuthController::class, 'resetWithOtp'])->name('password.reset');
+
+    Route::get('/auth/microsoft/redirect', [AuthController::class, 'redirectToMicrosoft'])->name('auth.microsoft.redirect');
+    Route::get('/auth/microsoft/callback', [AuthController::class, 'handleMicrosoftCallback'])->name('auth.microsoft.callback');
 });
 
 // MFA verification (auth but MFA not yet verified)

@@ -48,4 +48,12 @@ return [
         'folder'        => env('SHAREPOINT_FOLDER', 'ICT Register Backups'),
     ],
 
+    'microsoft' => [
+        'tenant_id'      => env('MICROSOFT_TENANT_ID'),
+        'client_id'      => env('MICROSOFT_CLIENT_ID'),
+        'client_secret'  => env('MICROSOFT_CLIENT_SECRET'),
+        'redirect'       => env('MICROSOFT_REDIRECT_URI'),
+        'allowed_domain' => env('SSO_ALLOWED_DOMAIN', 'gmbdura.co.zw'),
+    ],
+
 ];
