@@ -29,3 +29,15 @@ jobs:
 
       - name: Run tests
         run: php artisan test
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          push: false
+          tags: ictregister:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
