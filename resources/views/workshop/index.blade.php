@@ -7,6 +7,7 @@
     <div class="d-flex gap-2">
         @if(auth()->user()->isAdminOrHod())
         <a href="{{ route('equipment.index', ['type' => 'workshop']) }}" class="btn btn-secondary"><i class="fas fa-boxes"></i> Equipments</a>
+        <a href="{{ route('workshop.import') }}" class="btn btn-secondary"><i class="fas fa-file-import"></i> Import Equipment</a>
         @endif
         <a href="{{ route('workshop.create') }}" class="btn btn-primary"><i class="fas fa-plus"></i> New Job</a>
     </div>

@@ -45,6 +45,64 @@ class EquipmentSearchService
         return $this->suggest($query, 1)[0] ?? null;
     }
 
+    /**
+     * Exact (non-fuzzy) existence check for a serial/asset tag across every equipment
+     * source. Use this for duplicate detection — suggest()/resolveBest() rank by
+     * relevance and can surface a substring/fuzzy match even when nothing is an exact
+     * duplicate, which would incorrectly flag brand-new equipment as already existing.
+     */
+    public function existsExact(string $serial): ?array
+    {
+        $serial = trim($serial);
+        if ($serial === '') {
+            return null;
+        }
+
+        $receiving = EquipmentReceivingRegister::where('serial_number', $serial)
+            ->orWhereJsonContains('serial_numbers', $serial)
+            ->first();
+        if ($receiving) {
+            return [
+                'identifier_type' => 'serial_number',
+                'identifier_value' => $serial,
+                'label' => "{$serial} — {$receiving->item_description}",
+                'meta' => "Receiving register — Ref {$receiving->cross_ref_no}",
+            ];
+        }
+
+        $workshop = WorkshopEquipmentRegister::where('serial_number_asset_tag', $serial)->first();
+        if ($workshop) {
+            return [
+                'identifier_type' => 'serial_number',
+                'identifier_value' => $serial,
+                'label' => "{$serial} — {$workshop->equipment_type}",
+                'meta' => "Workshop job {$workshop->entry_job_number} — {$workshop->status}",
+            ];
+        }
+
+        $redistribution = EquipmentRedistribution::whereJsonContains('serial_numbers', $serial)->first();
+        if ($redistribution) {
+            return [
+                'identifier_type' => 'serial_number',
+                'identifier_value' => $serial,
+                'label' => "{$serial} — assigned to {$redistribution->recipient_name}",
+                'meta' => $redistribution->depot_department ?: $redistribution->redistribution_type,
+            ];
+        }
+
+        $disposal = EquipmentDisposal::where('asset_tag_serial_no', $serial)->first();
+        if ($disposal) {
+            return [
+                'identifier_type' => 'serial_number',
+                'identifier_value' => $serial,
+                'label' => "{$serial} — {$disposal->asset_description}",
+                'meta' => "Disposal — {$disposal->status}",
+            ];
+        }
+
+        return null;
+    }
+
     private function relevance(string $value, string $query): int
     {
         $value = mb_strtolower($value);

@@ -59,6 +59,8 @@ Route::middleware(['auth', 'mfa', 'force.password'])->group(function () {
     Route::get('equipment', [EquipmentController::class, 'index'])->name('equipment.index')->middleware('role:super_admin,hod');
 
     // Workshop Register — all roles
+    Route::get('workshop/import', [WorkshopController::class, 'importForm'])->name('workshop.import')->middleware('role:hod,super_admin');
+    Route::post('workshop/import', [WorkshopController::class, 'import'])->name('workshop.import.store')->middleware('role:hod,super_admin');
     Route::resource('workshop', WorkshopController::class)->except(['destroy']);
     Route::post('workshop/{workshop}/comment', [WorkshopController::class, 'addComment'])->name('workshop.comment');
     Route::post('workshop/{workshop}/assign-self', [WorkshopController::class, 'assignSelf'])->name('workshop.assign-self');

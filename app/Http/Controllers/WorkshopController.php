@@ -8,10 +8,31 @@ use App\Models\EquipmentReceivingRegister;
 use App\Models\TaskComment;
 use App\Models\User;
 use App\Models\WorkshopEquipmentRegister;
+use App\Services\EquipmentSearchService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Shared\Date as ExcelDate;
 
 class WorkshopController extends Controller
 {
+    /** Maps normalized (trimmed, uppercased) template headers to internal row keys. */
+    private const IMPORT_HEADER_MAP = [
+        'DATE RECEIVED' => 'date_received',
+        'FROM' => 'from',
+        'TO' => 'to',
+        'FAULT' => 'fault',
+        'MODEL' => 'model',
+        'TYPE' => 'type',
+        'RECEIVED BY' => 'received_by',
+        'STATUS' => 'status',
+        'COLLECTED/CARTED BY' => 'collected_by',
+        'TECHNICIAN' => 'technician',
+        'DEPARTURE DATE' => 'departure_date',
+        'SERIAL NO' => 'serial_no',
+        '208 NUMBER' => 'form208',
+    ];
+
     public function index(Request $request)
     {
         $user = auth()->user();
@@ -269,5 +290,159 @@ class WorkshopController extends Controller
         AuditTrail::log('assign_self', 'Workshop', "{$user->username} self-assigned job: {$workshop->entry_job_number}", 'info', $workshop->id);
 
         return back()->with('success', 'Task assigned to yourself.');
+    }
+
+    public function importForm()
+    {
+        return view('workshop.import');
+    }
+
+    public function import(Request $request, EquipmentSearchService $search)
+    {
+        $request->validate(['file' => 'required|file|mimes:xlsx,xls,csv']);
+
+        $sheet = IOFactory::load($request->file('file')->getRealPath())->getActiveSheet();
+        $rows  = $sheet->toArray(null, true, true, false);
+
+        if (empty($rows)) {
+            return back()->withErrors(['file' => 'The uploaded file has no rows.']);
+        }
+
+        $headerMap = $this->buildImportHeaderMap(array_shift($rows));
+
+        $imported  = [];
+        $duplicates = [];
+        $invalid   = [];
+
+        foreach ($rows as $i => $row) {
+            $rowNumber = $i + 2; // +1 for 0-index, +1 for the header row already shifted off
+            $data = $this->mapImportRow($row, $headerMap);
+
+            // Fully blank spacer row — nothing to report, nothing to do.
+            if ($data['type'] === '' && $data['serial_no'] === '') {
+                continue;
+            }
+
+            $serial = trim($data['serial_no']);
+            if ($serial === '') {
+                $invalid[] = ['row' => $rowNumber, 'reason' => 'Missing serial number'];
+                continue;
+            }
+
+            $existing = $search->existsExact($serial);
+            if ($existing) {
+                $duplicates[] = [
+                    'row' => $rowNumber,
+                    'serial' => $serial,
+                    'label' => $existing['label'],
+                    'meta' => $existing['meta'],
+                    'identifier_type' => $existing['identifier_type'],
+                ];
+                continue;
+            }
+
+            $remarks = $data['technician'] !== ''
+                ? "Imported technician note: {$data['technician']}"
+                : null;
+
+            $job = WorkshopEquipmentRegister::create([
+                'entry_job_number'       => WorkshopEquipmentRegister::generateJobNumber(),
+                'cross_ref_form208'      => $data['form208'] ?: null,
+                'date_time_received'     => $this->parseImportDate($data['date_received']) ?? now(),
+                'depot_name'             => $data['from'] ?: null,
+                'contact_person'         => $data['received_by'] ?: null,
+                'equipment_type'         => $data['type'] ?: 'Unspecified',
+                'brand_make_model'       => $data['model'] ?: null,
+                'serial_number_asset_tag' => $serial,
+                'nature_of_fault'        => $data['fault'] ?: 'Not specified',
+                'technician_assigned'    => null,
+                'status'                 => $this->normalizeImportStatus($data['status']),
+                'collector_name'         => $data['collected_by'] ?: null,
+                'date_collected'         => $this->parseImportDate($data['departure_date']),
+                'remarks_comments'       => $remarks,
+                'priority_level'         => 'Medium',
+                'created_by'             => auth()->id(),
+            ]);
+
+            EquipmentHistory::record(
+                'serial_number', $serial,
+                'Workshop Received', "Received at workshop (bulk import). Job: {$job->entry_job_number}.",
+                'workshop_equipment_registers', $job->id
+            );
+
+            $imported[] = ['row' => $rowNumber, 'job' => $job];
+        }
+
+        AuditTrail::log(
+            'import', 'Workshop',
+            'Bulk imported ' . count($imported) . ' job(s), ' . count($duplicates) . ' duplicate(s) skipped, '
+                . count($invalid) . ' invalid row(s), from ' . $request->file('file')->getClientOriginalName(),
+            'success'
+        );
+
+        return view('workshop.import-results', compact('imported', 'duplicates', 'invalid'));
+    }
+
+    /** Build column-index => canonical-key map from the header row, trimmed/uppercased so column order doesn't matter. */
+    private function buildImportHeaderMap(array $headerRow): array
+    {
+        $map = [];
+        foreach ($headerRow as $index => $header) {
+            $key = self::IMPORT_HEADER_MAP[mb_strtoupper(trim((string) $header))] ?? null;
+            if ($key) {
+                $map[$key] = $index;
+            }
+        }
+        return $map;
+    }
+
+    /** Extract a canonical-keyed, string-trimmed row from a raw spreadsheet row using the header map. */
+    private function mapImportRow(array $row, array $headerMap): array
+    {
+        $data = [];
+        foreach (self::IMPORT_HEADER_MAP as $key) {
+            $index = $headerMap[$key] ?? null;
+            $value = $index !== null ? ($row[$index] ?? '') : '';
+            $data[$key] = trim((string) $value);
+        }
+        return $data;
+    }
+
+    private function normalizeImportStatus(string $status): string
+    {
+        $valid = ['Pending', 'In Progress', 'Completed', 'Collected'];
+        foreach ($valid as $option) {
+            if (mb_strtolower($status) === mb_strtolower($option)) {
+                return $option;
+            }
+        }
+        return 'Pending';
+    }
+
+    private function parseImportDate(string $value): ?Carbon
+    {
+        if ($value === '') {
+            return null;
+        }
+
+        if (is_numeric($value)) {
+            try {
+                return Carbon::instance(ExcelDate::excelToDateTimeObject((float) $value));
+            } catch (\Throwable) {
+                return null;
+            }
+        }
+
+        foreach (['d/m/Y', 'd/m/y', 'Y-m-d', 'd-m-Y'] as $format) {
+            try {
+                // These formats carry no time component — Carbon would otherwise default
+                // the time-of-day to "now" rather than midnight.
+                return Carbon::createFromFormat($format, $value)->startOfDay();
+            } catch (\Throwable) {
+                continue;
+            }
+        }
+
+        return null;
     }
 }
