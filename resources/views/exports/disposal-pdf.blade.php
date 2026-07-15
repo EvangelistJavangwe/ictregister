@@ -81,7 +81,7 @@
 </table>
 
 <div class="footer">
-    ICT Equipment Disposal Register &nbsp;&bull;&nbsp; Developed by Evangelist Javangwe | Analyst Programmer
+    ICT Equipment Disposal Register &nbsp;&bull;&nbsp; Developed by GMB ICT Department
 </div>
 </body>
 </html>

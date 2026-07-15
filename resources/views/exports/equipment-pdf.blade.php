@@ -70,7 +70,7 @@
 </table>
 
 <div class="footer">
-    ICT Equipment — Workshop &amp; Registry &nbsp;&bull;&nbsp; Developed by Evangelist Javangwe | Analyst Programmer
+    ICT Equipment — Workshop &amp; Registry &nbsp;&bull;&nbsp; Developed by GMB ICT Department
 </div>
 </body>
 </html>

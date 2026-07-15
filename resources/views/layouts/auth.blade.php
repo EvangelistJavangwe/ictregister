@@ -67,7 +67,7 @@
             @yield('content')
         </div>
         <div style="padding:12px 28px 16px;text-align:center;border-top:1px solid #f1f5f9;">
-            <span style="font-size:.72rem;color:#94a3b8;">Developed by <strong style="color:#475569;">Evangelist Javangwe</strong> &nbsp;|&nbsp; Analyst Programmer</span>
+            <span style="font-size:.72rem;color:#94a3b8;">Developed by <strong style="color:#475569;">GMB ICT Department</strong></span>
         </div>
     </div>
 <script>

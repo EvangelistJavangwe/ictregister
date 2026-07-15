@@ -84,7 +84,7 @@
 </table>
 
 <div class="footer">
-    Helpdesk Administrator &nbsp;&bull;&nbsp; Developed by Evangelist Javangwe | Analyst Programmer
+    Helpdesk Administrator &nbsp;&bull;&nbsp; Developed by GMB ICT Department
 </div>
 </body>
 </html>

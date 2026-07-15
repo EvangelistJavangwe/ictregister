@@ -269,7 +269,7 @@
             @yield('content')
         </div>
         <footer style="padding:10px 24px;border-top:1px solid #e2e8f0;background:#fff;display:flex;justify-content:flex-end;align-items:center;">
-            <span style="font-size:.75rem;color:#94a3b8;">Developed by <strong style="color:#475569;">Evangelist Javangwe</strong> &nbsp;|&nbsp; Analyst Programmer</span>
+            <span style="font-size:.75rem;color:#94a3b8;">Developed by <strong style="color:#475569;">GMB ICT Department</strong></span>
         </footer>
     </div>
 

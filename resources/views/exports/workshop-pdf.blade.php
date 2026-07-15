@@ -90,7 +90,7 @@
 </table>
 
 <div class="footer">
-    ICT Workshop Equipment Register &nbsp;&bull;&nbsp; Developed by Evangelist Javangwe | Analyst Programmer
+    ICT Workshop Equipment Register &nbsp;&bull;&nbsp; Developed by GMB ICT Department
 </div>
 </body>
 </html>

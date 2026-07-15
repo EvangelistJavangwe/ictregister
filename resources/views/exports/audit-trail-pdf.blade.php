@@ -76,7 +76,7 @@
 </table>
 
 <div class="footer">
-    System Audit Trail &nbsp;&bull;&nbsp; Developed by Evangelist Javangwe | Analyst Programmer
+    System Audit Trail &nbsp;&bull;&nbsp; Developed by GMB ICT Department
 </div>
 </body>
 </html>
