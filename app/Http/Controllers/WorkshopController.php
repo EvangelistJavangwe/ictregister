@@ -11,6 +11,7 @@ use App\Models\WorkshopEquipmentRegister;
 use App\Services\EquipmentSearchService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Shared\Date as ExcelDate;
 
@@ -184,6 +185,10 @@ class WorkshopController extends Controller
             );
         }
 
+        if ($job->technician_assigned) {
+            $this->notifyTechnicianAssignment($job, $job->technician);
+        }
+
         AuditTrail::log('create', 'Workshop', "Created workshop job: {$job->entry_job_number}", 'success', $job->id);
 
         return redirect()->route('workshop.show', $job)
@@ -226,6 +231,7 @@ class WorkshopController extends Controller
         ]);
 
         $old = $workshop->status;
+        $oldTechnicianAssigned = $workshop->technician_assigned;
 
         // Status is set by whoever is handling the job, not derived from assignment.
         $status = $request->status;
@@ -252,6 +258,10 @@ class WorkshopController extends Controller
                 'Status Changed', "Workshop job {$workshop->entry_job_number} status changed from {$old} to {$workshop->status}",
                 'workshop_equipment_registers', $workshop->id
             );
+        }
+
+        if ($workshop->technician_assigned && $workshop->technician_assigned != $oldTechnicianAssigned) {
+            $this->notifyTechnicianAssignment($workshop, $workshop->technician);
         }
 
         AuditTrail::log('update', 'Workshop', "Updated workshop job: {$workshop->entry_job_number}", 'success', $workshop->id);
@@ -287,6 +297,8 @@ class WorkshopController extends Controller
             'technician_assigned' => $user->id,
             'updated_by' => $user->id,
         ]);
+
+        $this->notifyTechnicianAssignment($workshop, $user);
 
         AuditTrail::log('assign_self', 'Workshop', "{$user->username} self-assigned job: {$workshop->entry_job_number}", 'info', $workshop->id);
 
@@ -445,5 +457,42 @@ class WorkshopController extends Controller
         }
 
         return null;
+    }
+
+    /**
+     * Email the assigned technician about a workshop job — including self-assignment.
+     * Only sends to accounts on the organization's Entra domain (same allow-list already
+     * used for Microsoft SSO), per the requirement to restrict this to gmbdura.co.zw staff.
+     */
+    private function notifyTechnicianAssignment(WorkshopEquipmentRegister $job, ?User $technician): void
+    {
+        if (!$technician || !$technician->email) {
+            return;
+        }
+
+        $allowedDomain = config('services.microsoft.allowed_domain');
+        $email = mb_strtolower(trim($technician->email));
+
+        if (!$allowedDomain || !str_ends_with($email, '@' . mb_strtolower($allowedDomain))) {
+            return;
+        }
+
+        try {
+            Mail::raw(
+                "Hello {$technician->firstname},\n\n"
+                . "You have been assigned to workshop job {$job->entry_job_number}.\n\n"
+                . "Equipment: {$job->equipment_type}" . ($job->brand_make_model ? " ({$job->brand_make_model})" : '') . "\n"
+                . "Serial/Asset Tag: " . ($job->serial_number_asset_tag ?: '—') . "\n"
+                . "Nature of Fault: {$job->nature_of_fault}\n"
+                . "Priority: {$job->priority_level}\n"
+                . ($job->due_date ? "Due Date: {$job->due_date->format('d M Y H:i')}\n" : '')
+                . "\nPlease log in to the ICT Register System to view full details.",
+                function ($message) use ($technician, $job) {
+                    $message->to($technician->email)->subject("Workshop Job Assigned: {$job->entry_job_number}");
+                }
+            );
+        } catch (\Exception $e) {
+            // Silently fail — matches this app's existing mail-sending convention elsewhere.
+        }
     }
 }
