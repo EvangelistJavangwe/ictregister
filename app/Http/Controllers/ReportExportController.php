@@ -53,6 +53,7 @@ class ReportExportController extends Controller
                 ->where('entry_job_number', 'like', "%{$q}%")
                 ->orWhere('equipment_type', 'like', "%{$q}%")
                 ->orWhere('serial_number_asset_tag', 'like', "%{$q}%")
+                ->orWhere('depot_name', 'like', "%{$q}%")
                 ->orWhere('department', 'like', "%{$q}%")
                 ->orWhere('contact_person', 'like', "%{$q}%"));
         }

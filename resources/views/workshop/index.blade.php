@@ -100,7 +100,7 @@
         <table>
             <thead>
                 <tr>
-                    <th>Job Number</th><th>Date Received</th><th>Equipment</th><th>Dept/Contact</th><th>Serial/Asset</th>
+                    <th>Job Number</th><th>Date Received</th><th>Equipment</th><th>Depot/Dept/Contact</th><th>Serial/Asset</th>
                     <th>Priority</th><th>Technician</th><th>Status</th><th>Due Date</th><th>Actions</th>
                 </tr>
             </thead>
@@ -110,7 +110,12 @@
                 <td><strong>{{ $job->entry_job_number }}</strong></td>
                 <td class="text-sm">{{ $job->date_time_received?->format('d M Y H:i') }}</td>
                 <td>{{ $job->equipment_type }}<br><small class="text-muted">{{ $job->brand_make_model }}</small></td>
-                <td class="text-sm">{{ $job->department }}<br>{{ $job->contact_person }}</td>
+                <td class="text-sm">
+                    @if($job->depot_name)<strong>{{ $job->depot_name }}</strong><br>@endif
+                    {{ $job->department }}
+                    @if($job->department && $job->contact_person)<br>@endif
+                    {{ $job->contact_person }}
+                </td>
                 <td class="text-sm">{{ $job->serial_number_asset_tag ?? '—' }}</td>
                 <td>
                     <span class="badge {{ $job->priority_level==='Urgent'?'badge-danger':($job->priority_level==='High'?'badge-warning':($job->priority_level==='Medium'?'badge-info':'badge-secondary')) }}">
