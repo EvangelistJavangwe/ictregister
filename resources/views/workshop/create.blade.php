@@ -27,16 +27,17 @@
                     <input type="text" name="brand_make_model" class="form-control" value="{{ old('brand_make_model') }}" placeholder="e.g. Dell Latitude 5490">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Serial Number / Asset Tag</label>
+                    <label class="form-label">Serial Number / Asset Tag *</label>
                     <div style="position:relative;">
                         <input type="text" name="serial_number_asset_tag" id="serial_number_asset_tag"
-                               class="form-control" value="{{ old('serial_number_asset_tag') }}"
+                               class="form-control @error('serial_number_asset_tag') is-invalid @enderror" value="{{ old('serial_number_asset_tag') }}"
                                placeholder="Type serial — Equipment Type & Brand auto-fill"
-                               autocomplete="off">
+                               autocomplete="off" required>
                         <div id="serial-spinner" style="display:none;position:absolute;right:10px;top:50%;transform:translateY(-50%);color:#94a3b8;">
                             <i class="fas fa-circle-notch fa-spin"></i>
                         </div>
                     </div>
+                    @error('serial_number_asset_tag')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     <div id="serial-lookup-result" style="display:none;margin-top:6px;padding:8px 12px;border-radius:8px;font-size:.8rem;"></div>
                 </div>
                 <div class="form-group">

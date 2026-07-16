@@ -75,7 +75,7 @@ class WorkshopController extends Controller
             ->groupBy('status')
             ->pluck('total', 'status');
 
-        $jobs = $query->latest()->paginate(15);
+        $jobs = $query->oldest()->paginate(15);
         $technicians = User::where('role', 'technician')->get();
 
         return view('workshop.index', compact('jobs', 'overdue', 'technicians', 'statusCounts'));
@@ -149,7 +149,7 @@ class WorkshopController extends Controller
             'contact_person'           => 'nullable|string|max:100',
             'phone_number'             => 'nullable|string|max:20',
             'brand_make_model'         => 'nullable|string|max:150',
-            'serial_number_asset_tag'  => 'nullable|string|max:100',
+            'serial_number_asset_tag'  => 'required|string|max:100',
             'depot_name'               => 'nullable|string|max:100',
             'department'               => 'nullable|string|max:100',
             'physical_condition_on_receipt' => 'nullable|string|max:200',

@@ -57,7 +57,7 @@ class ReportExportController extends Controller
                 ->orWhere('department', 'like', "%{$q}%")
                 ->orWhere('contact_person', 'like', "%{$q}%"));
         }
-        return $query->latest();
+        return $query->oldest();
     }
 
     private function workshopHeaders(): array
