@@ -211,7 +211,7 @@ class WorkshopController extends Controller
     public function update(Request $request, WorkshopEquipmentRegister $workshop)
     {
         $request->validate([
-            'repair_action_taken'      => 'nullable|string',
+            'repair_action_taken'      => 'nullable|string|required_if:status,Completed,Collected',
             'date_repair_completed'    => [
                 'nullable', 'date', 'before_or_equal:today',
                 'after_or_equal:'.$workshop->date_time_received->format('Y-m-d'),

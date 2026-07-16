@@ -17,7 +17,7 @@
             <div class="form-row">
                 <div class="form-group">
                     <label class="form-label">Status</label>
-                    <select name="status" class="form-control" required>
+                    <select name="status" id="status-select" class="form-control" required onchange="toggleRepairActionRequired()">
                         @foreach(['Pending','In Progress','Completed','Collected'] as $s)
                         <option value="{{ $s }}" {{ $workshop->status === $s ? 'selected' : '' }}>{{ $s }}</option>
                         @endforeach
@@ -43,8 +43,9 @@
             </div>
 
             <div class="form-group">
-                <label class="form-label">Repair Action Taken</label>
-                <textarea name="repair_action_taken" class="form-control" rows="4">{{ old('repair_action_taken', $workshop->repair_action_taken) }}</textarea>
+                <label class="form-label" id="repair-action-label">Repair Action Taken</label>
+                <textarea name="repair_action_taken" id="repair_action_taken" class="form-control @error('repair_action_taken') is-invalid @enderror" rows="4">{{ old('repair_action_taken', $workshop->repair_action_taken) }}</textarea>
+                @error('repair_action_taken')<div class="invalid-feedback">{{ $message }}</div>@enderror
             </div>
 
             <div class="form-row">
@@ -110,11 +111,22 @@
 
 @push('scripts')
 <script>
+// Repair Action Taken becomes required once the job is Completed or Collected
+function toggleRepairActionRequired() {
+    const status   = document.getElementById('status-select').value;
+    const textarea = document.getElementById('repair_action_taken');
+    const label    = document.getElementById('repair-action-label');
+    const isRequired = status === 'Completed' || status === 'Collected';
+
+    textarea.required = isRequired;
+    label.textContent = isRequired ? 'Repair Action Taken *' : 'Repair Action Taken';
+}
+
 // Auto-promote status to Collected when both collection fields are filled
 function checkCollectionStatus() {
     const dateVal = document.getElementById('date_collected').value.trim();
     const nameVal = document.getElementById('collector_name').value.trim();
-    const statusSelect = document.querySelector('select[name="status"]');
+    const statusSelect = document.getElementById('status-select');
     if (dateVal && nameVal) {
         statusSelect.value = 'Collected';
         statusSelect.style.borderColor = '#7c3aed';
@@ -124,6 +136,7 @@ function checkCollectionStatus() {
         statusSelect.style.borderColor = '';
         statusSelect.style.background  = '';
     }
+    toggleRepairActionRequired();
 }
 document.getElementById('date_collected').addEventListener('change', checkCollectionStatus);
 document.getElementById('collector_name').addEventListener('input',  checkCollectionStatus);
