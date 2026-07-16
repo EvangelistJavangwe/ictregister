@@ -117,14 +117,19 @@ class UserController extends Controller
     public function edit(User $user)
     {
         $this->authorizeAccess($user);
+        $auth = auth()->user();
         $hodDesignations = self::HOD_DESIGNATIONS;
         $techDesignations = self::TECH_DESIGNATIONS;
-        return view('users.edit', compact('user', 'hodDesignations', 'techDesignations'));
+        // Only super_admin can change roles, and never their own (avoids self-lockout).
+        $canEditRole = $auth->isSuperAdmin() && $user->id !== $auth->id;
+        return view('users.edit', compact('user', 'hodDesignations', 'techDesignations', 'canEditRole'));
     }
 
     public function update(Request $request, User $user)
     {
         $this->authorizeAccess($user);
+        $auth = auth()->user();
+        $canEditRole = $auth->isSuperAdmin() && $user->id !== $auth->id;
 
         $request->validate([
             'firstname'   => 'required|string|max:100',
@@ -132,9 +137,21 @@ class UserController extends Controller
             'email'       => ['required', 'email', Rule::unique('users')->ignore($user->id)],
             'phone'       => 'nullable|string|max:20',
             'designation' => 'nullable|string|max:100',
+            'role'        => $canEditRole ? ['required', Rule::in(['super_admin', 'hod', 'technician'])] : 'prohibited',
         ]);
 
+        $oldRole = $user->role;
+
         $user->update($request->only('firstname', 'lastname', 'email', 'phone', 'designation'));
+
+        if ($canEditRole && $request->role !== $oldRole) {
+            $user->update(['role' => $request->role]);
+            AuditTrail::log(
+                'update_user_role', 'Users',
+                "Changed role for {$user->username} from {$oldRole} to {$request->role}",
+                'warning', $user->id
+            );
+        }
 
         AuditTrail::log('update_user', 'Users', "Updated user: {$user->username}", 'success', $user->id);
 

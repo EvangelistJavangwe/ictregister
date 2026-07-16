@@ -18,7 +18,16 @@
                 </div>
                 <div class="form-group">
                     <label class="form-label">Role</label>
+                    @if($canEditRole)
+                    <select name="role" id="role-select" class="form-control @error('role') is-invalid @enderror" onchange="updateDesignations()">
+                        @foreach(['super_admin', 'hod', 'technician'] as $role)
+                        <option value="{{ $role }}" {{ old('role', $user->role) === $role ? 'selected' : '' }}>{{ ucfirst(str_replace('_',' ',$role)) }}</option>
+                        @endforeach
+                    </select>
+                    @error('role')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    @else
                     <input type="text" class="form-control" value="{{ ucfirst(str_replace('_',' ',$user->role)) }}" disabled style="background:#f8fafc;">
+                    @endif
                 </div>
                 <div class="form-group">
                     <label class="form-label">First Name *</label>
@@ -39,12 +48,12 @@
                     <label class="form-label">Phone</label>
                     <input type="text" name="phone" class="form-control" value="{{ old('phone', $user->phone) }}">
                 </div>
-                <div class="form-group">
+                <div class="form-group" id="designation-group">
                     <label class="form-label">Designation</label>
-                    <select name="designation" class="form-control">
+                    <select name="designation" id="designation-select" class="form-control">
                         <option value="">— None —</option>
                         @foreach($user->role === 'hod' ? $hodDesignations : $techDesignations as $d)
-                        <option value="{{ $d }}" {{ $user->designation === $d ? 'selected' : '' }}>{{ $d }}</option>
+                        <option value="{{ $d }}" {{ old('designation', $user->designation) === $d ? 'selected' : '' }}>{{ $d }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -54,4 +63,36 @@
         </form>
     </div>
 </div>
+
+@if($canEditRole)
+@push('scripts')
+<script>
+const hodDesignations = @json($hodDesignations);
+const techDesignations = @json($techDesignations);
+const currentDesignation = @json(old('designation', $user->designation));
+
+function updateDesignations() {
+    const role = document.getElementById('role-select').value;
+    const group = document.getElementById('designation-group');
+    const select = document.getElementById('designation-select');
+    const previousValue = select.value || currentDesignation;
+    select.innerHTML = '<option value="">— None —</option>';
+
+    let options = [];
+    if (role === 'hod') options = hodDesignations;
+    else if (role === 'technician') options = techDesignations;
+
+    if (options.length) {
+        group.style.display = 'block';
+        options.forEach(d => {
+            const selected = d === previousValue ? 'selected' : '';
+            select.innerHTML += `<option value="${d}" ${selected}>${d}</option>`;
+        });
+    } else {
+        group.style.display = 'none';
+    }
+}
+</script>
+@endpush
+@endif
 @endsection
