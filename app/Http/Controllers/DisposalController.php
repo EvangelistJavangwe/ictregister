@@ -87,16 +87,16 @@ class DisposalController extends Controller
 
         $request->validate([
             'asset_description'    => 'required|string|max:255',
-            'asset_tag_serial_no'  => 'nullable|string|max:100',
-            'model_brand'          => 'nullable|string|max:150',
-            'department_user'      => 'nullable|string|max:200',
+            'asset_tag_serial_no'  => 'required|string|max:100',
+            'model_brand'          => 'required|string|max:150',
+            'department_user'      => 'required|string|max:200',
             'date_acquired'        => 'nullable|date|before_or_equal:today',
-            'condition_at_disposal'=> 'nullable|string|max:200',
+            'condition_at_disposal'=> 'required|string|max:200',
             'reason_for_disposal'  => 'required|string',
             'disposal_method'      => 'nullable|string|max:100',
             'disposal_value'       => 'nullable|numeric|min:0',
             'data_wiped_destroyed' => 'nullable|boolean',
-            'remarks'              => 'nullable|string',
+            'remarks'              => 'required|string',
         ]);
 
         $isTechnician = $user->isTechnician();
@@ -146,7 +146,10 @@ class DisposalController extends Controller
 
         $request->validate([
             'asset_description'    => 'required|string|max:255',
-            'condition_at_disposal'=> 'nullable|string|max:200',
+            'asset_tag_serial_no'  => 'required|string|max:100',
+            'model_brand'          => 'required|string|max:150',
+            'department_user'      => 'required|string|max:200',
+            'condition_at_disposal'=> 'required|string|max:200',
             'reason_for_disposal'  => 'required|string',
             'disposal_method'      => 'nullable|string|max:100',
             'date_acquired'        => 'nullable|date|before_or_equal:today',
@@ -156,7 +159,7 @@ class DisposalController extends Controller
             ]),
             'disposal_value'       => 'nullable|numeric|min:0',
             'data_wiped_destroyed' => 'nullable|boolean',
-            'remarks'              => 'nullable|string',
+            'remarks'              => 'required|string',
         ]);
 
         $disposal->update([

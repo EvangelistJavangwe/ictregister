@@ -23,8 +23,9 @@
                     @error('equipment_type')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Brand/Make/Model</label>
-                    <input type="text" name="brand_make_model" class="form-control" value="{{ old('brand_make_model') }}" placeholder="e.g. Dell Latitude 5490">
+                    <label class="form-label">Brand/Make/Model *</label>
+                    <input type="text" name="brand_make_model" class="form-control @error('brand_make_model') is-invalid @enderror" value="{{ old('brand_make_model') }}" placeholder="e.g. Dell Latitude 5490" required>
+                    @error('brand_make_model')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
                 <div class="form-group">
                     <label class="form-label">Serial Number / Asset Tag *</label>
@@ -41,12 +42,14 @@
                     <div id="serial-lookup-result" style="display:none;margin-top:6px;padding:8px 12px;border-radius:8px;font-size:.8rem;"></div>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Cross Ref / Form 208</label>
-                    <input type="text" name="cross_ref_form208" class="form-control" value="{{ old('cross_ref_form208') }}">
+                    <label class="form-label">Cross Ref / Form 208 *</label>
+                    <input type="text" name="cross_ref_form208" class="form-control @error('cross_ref_form208') is-invalid @enderror" value="{{ old('cross_ref_form208') }}" required>
+                    @error('cross_ref_form208')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Physical Condition on Receipt</label>
-                    <input type="text" name="physical_condition_on_receipt" class="form-control" value="{{ old('physical_condition_on_receipt') }}" placeholder="e.g. Good, Damaged, Cracked screen">
+                    <label class="form-label">Physical Condition on Receipt *</label>
+                    <input type="text" name="physical_condition_on_receipt" class="form-control @error('physical_condition_on_receipt') is-invalid @enderror" value="{{ old('physical_condition_on_receipt') }}" placeholder="e.g. Good, Damaged, Cracked screen" required>
+                    @error('physical_condition_on_receipt')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
             </div>
 
@@ -54,20 +57,24 @@
             <h4 style="font-size:.9rem;font-weight:700;color:#64748b;text-transform:uppercase;margin-bottom:14px;"><i class="fas fa-building"></i> Sender Information</h4>
             <div class="form-row">
                 <div class="form-group">
-                    <label class="form-label">Depot Name</label>
-                    <input type="text" name="depot_name" class="form-control" value="{{ old('depot_name') }}">
+                    <label class="form-label">Depot Name *</label>
+                    <input type="text" name="depot_name" class="form-control @error('depot_name') is-invalid @enderror" value="{{ old('depot_name') }}" required>
+                    @error('depot_name')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Department</label>
-                    <input type="text" name="department" class="form-control" value="{{ old('department') }}">
+                    <label class="form-label">Department *</label>
+                    <input type="text" name="department" class="form-control @error('department') is-invalid @enderror" value="{{ old('department') }}" required>
+                    @error('department')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Contact Person</label>
-                    <input type="text" name="contact_person" class="form-control" value="{{ old('contact_person') }}">
+                    <label class="form-label">Contact Person *</label>
+                    <input type="text" name="contact_person" class="form-control @error('contact_person') is-invalid @enderror" value="{{ old('contact_person') }}" required>
+                    @error('contact_person')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Phone Number</label>
-                    <input type="text" name="phone_number" class="form-control" value="{{ old('phone_number') }}">
+                    <label class="form-label">Phone Number *</label>
+                    <input type="text" name="phone_number" class="form-control @error('phone_number') is-invalid @enderror" value="{{ old('phone_number') }}" required>
+                    @error('phone_number')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
             </div>
 
@@ -79,8 +86,9 @@
                 @error('nature_of_fault')<div class="invalid-feedback">{{ $message }}</div>@enderror
             </div>
             <div class="form-group">
-                <label class="form-label">Accessories Received</label>
-                <input type="text" name="accessories_received" class="form-control" value="{{ old('accessories_received') }}" placeholder="e.g. Power cable, Mouse">
+                <label class="form-label">Accessories Received *</label>
+                <input type="text" name="accessories_received" class="form-control @error('accessories_received') is-invalid @enderror" value="{{ old('accessories_received') }}" placeholder="e.g. Power cable, Mouse" required>
+                @error('accessories_received')<div class="invalid-feedback">{{ $message }}</div>@enderror
             </div>
             <div class="form-row">
                 <div class="form-group">

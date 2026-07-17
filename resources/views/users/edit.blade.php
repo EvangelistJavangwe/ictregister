@@ -45,8 +45,9 @@
                     @error('email')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Phone</label>
-                    <input type="text" name="phone" class="form-control" value="{{ old('phone', $user->phone) }}">
+                    <label class="form-label">Phone *</label>
+                    <input type="text" name="phone" class="form-control @error('phone') is-invalid @enderror" value="{{ old('phone', $user->phone) }}" required>
+                    @error('phone')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
                 <div class="form-group" id="designation-group">
                     <label class="form-label">Designation</label>

@@ -17,16 +17,17 @@
             @csrf
             <div class="form-row">
                 <div class="form-group">
-                    <label class="form-label">Asset Tag / Serial No.</label>
+                    <label class="form-label">Asset Tag / Serial No. *</label>
                     <div style="position:relative;">
                         <input type="text" name="asset_tag_serial_no" id="asset_tag_serial_no"
-                               class="form-control" value="{{ old('asset_tag_serial_no') }}"
+                               class="form-control @error('asset_tag_serial_no') is-invalid @enderror" value="{{ old('asset_tag_serial_no') }}"
                                placeholder="Type serial — details auto-fill"
-                               autocomplete="off">
+                               autocomplete="off" required>
                         <div id="disposal-serial-spinner" style="display:none;position:absolute;right:10px;top:50%;transform:translateY(-50%);color:#94a3b8;">
                             <i class="fas fa-circle-notch fa-spin"></i>
                         </div>
                     </div>
+                    @error('asset_tag_serial_no')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     <div id="disposal-serial-result" style="display:none;margin-top:6px;padding:8px 12px;border-radius:8px;font-size:.8rem;"></div>
                 </div>
                 <div class="form-group">
@@ -37,14 +38,16 @@
                     @error('asset_description')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Model / Brand</label>
+                    <label class="form-label">Model / Brand *</label>
                     <input type="text" name="model_brand" id="model_brand"
-                           class="form-control" value="{{ old('model_brand') }}">
+                           class="form-control @error('model_brand') is-invalid @enderror" value="{{ old('model_brand') }}" required>
+                    @error('model_brand')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Department / User</label>
+                    <label class="form-label">Department / User *</label>
                     <input type="text" name="department_user" id="department_user"
-                           class="form-control" value="{{ old('department_user') }}">
+                           class="form-control @error('department_user') is-invalid @enderror" value="{{ old('department_user') }}" required>
+                    @error('department_user')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
                 <div class="form-group">
                     <label class="form-label">Date Acquired</label>
@@ -52,8 +55,9 @@
                            class="form-control" value="{{ old('date_acquired') }}">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Condition at Disposal</label>
-                    <input type="text" name="condition_at_disposal" class="form-control" value="{{ old('condition_at_disposal') }}" placeholder="e.g. Beyond repair, Obsolete">
+                    <label class="form-label">Condition at Disposal *</label>
+                    <input type="text" name="condition_at_disposal" class="form-control @error('condition_at_disposal') is-invalid @enderror" value="{{ old('condition_at_disposal') }}" placeholder="e.g. Beyond repair, Obsolete" required>
+                    @error('condition_at_disposal')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
                 @if(!auth()->user()->isTechnician())
                 <div class="form-group">
@@ -86,8 +90,9 @@
             </div>
 
             <div class="form-group">
-                <label class="form-label">Remarks</label>
-                <textarea name="remarks" class="form-control">{{ old('remarks') }}</textarea>
+                <label class="form-label">Remarks *</label>
+                <textarea name="remarks" class="form-control @error('remarks') is-invalid @enderror" required>{{ old('remarks') }}</textarea>
+                @error('remarks')<div class="invalid-feedback">{{ $message }}</div>@enderror
             </div>
 
             <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i>

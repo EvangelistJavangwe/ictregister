@@ -23,12 +23,14 @@
                     <input type="text" name="supplier" class="form-control" value="{{ old('supplier', $equipmentReceiving->supplier) }}" required>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Delivery Note No.</label>
-                    <input type="text" name="delivery_note_no" class="form-control" value="{{ old('delivery_note_no', $equipmentReceiving->delivery_note_no) }}">
+                    <label class="form-label">Delivery Note No. *</label>
+                    <input type="text" name="delivery_note_no" class="form-control @error('delivery_note_no') is-invalid @enderror" value="{{ old('delivery_note_no', $equipmentReceiving->delivery_note_no) }}" required>
+                    @error('delivery_note_no')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
                 <div class="form-group">
-                    <label class="form-label">LPO / PO No.</label>
-                    <input type="text" name="po_no" class="form-control" value="{{ old('po_no', $equipmentReceiving->po_no) }}">
+                    <label class="form-label">LPO / PO No. *</label>
+                    <input type="text" name="po_no" class="form-control @error('po_no') is-invalid @enderror" value="{{ old('po_no', $equipmentReceiving->po_no) }}" required>
+                    @error('po_no')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
             </div>
         </div>
@@ -43,8 +45,9 @@
                     <input type="text" name="item_description" class="form-control" value="{{ old('item_description', $equipmentReceiving->item_description) }}" required>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Brand / Model</label>
-                    <input type="text" name="brand_model" class="form-control" value="{{ old('brand_model', $equipmentReceiving->brand_model) }}">
+                    <label class="form-label">Brand / Model *</label>
+                    <input type="text" name="brand_model" class="form-control @error('brand_model') is-invalid @enderror" value="{{ old('brand_model', $equipmentReceiving->brand_model) }}" required>
+                    @error('brand_model')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
                 <div class="form-group">
                     <label class="form-label">Serial Number</label>
@@ -55,13 +58,15 @@
                     <input type="number" name="qty_received" class="form-control" value="{{ old('qty_received', $equipmentReceiving->qty_received) }}" min="1" required>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Accessories Included</label>
-                    <input type="text" name="accessories_included" class="form-control" value="{{ old('accessories_included', $equipmentReceiving->accessories_included) }}">
+                    <label class="form-label">Accessories Included *</label>
+                    <input type="text" name="accessories_included" class="form-control @error('accessories_included') is-invalid @enderror" value="{{ old('accessories_included', $equipmentReceiving->accessories_included) }}" required>
+                    @error('accessories_included')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
             </div>
             <div class="form-group">
-                <label class="form-label">Remarks</label>
-                <textarea name="remarks" class="form-control">{{ old('remarks', $equipmentReceiving->remarks) }}</textarea>
+                <label class="form-label">Remarks *</label>
+                <textarea name="remarks" class="form-control @error('remarks') is-invalid @enderror" required>{{ old('remarks', $equipmentReceiving->remarks) }}</textarea>
+                @error('remarks')<div class="invalid-feedback">{{ $message }}</div>@enderror
             </div>
         </div>
     </div>

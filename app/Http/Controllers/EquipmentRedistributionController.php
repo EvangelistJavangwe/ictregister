@@ -81,11 +81,11 @@ class EquipmentRedistributionController extends Controller
             'selected_serials.*'  => 'required|string',
             'asset_tags'          => 'nullable|array',
             'asset_tags.*'        => 'nullable|string|max:100',
-            'cross_ref_form208'   => 'nullable|string|max:100',
-            'issued_by'           => 'nullable|string|max:200',
+            'cross_ref_form208'   => 'required|string|max:100',
+            'issued_by'           => 'required|string|max:200',
             'receiver_signature'  => 'nullable|string',
             'issuer_signature'    => 'nullable|string',
-            'remarks'             => 'nullable|string',
+            'remarks'             => 'required|string',
         ]);
 
         $selectedSerials = $request->input('selected_serials', []);

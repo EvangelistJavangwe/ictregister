@@ -64,7 +64,7 @@ class UserController extends Controller
             'lastname'        => 'required|string|max:100',
             'employee_number' => 'required|string|unique:users,employee_number',
             'email'           => 'required|email|unique:users,email',
-            'phone'           => 'nullable|string|max:20',
+            'phone'           => 'required|string|max:20',
             'role'            => ['required', Rule::in(['super_admin', 'hod', 'technician'])],
             'designation'     => 'nullable|string|max:100',
         ]);
@@ -135,7 +135,7 @@ class UserController extends Controller
             'firstname'   => 'required|string|max:100',
             'lastname'    => 'required|string|max:100',
             'email'       => ['required', 'email', Rule::unique('users')->ignore($user->id)],
-            'phone'       => 'nullable|string|max:20',
+            'phone'       => 'required|string|max:20',
             'designation' => 'nullable|string|max:100',
             'role'        => $canEditRole ? ['required', Rule::in(['super_admin', 'hod', 'technician'])] : 'prohibited',
         ]);

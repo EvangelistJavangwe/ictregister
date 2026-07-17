@@ -248,17 +248,20 @@
                     <input type="text" name="depot_department" class="form-control" value="{{ old('depot_department') }}" placeholder="e.g. Plumtree Depot">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Issued By</label>
-                    <input type="text" name="issued_by" class="form-control" value="{{ old('issued_by', auth()->user()->firstname.' '.auth()->user()->lastname) }}">
+                    <label class="form-label">Issued By *</label>
+                    <input type="text" name="issued_by" class="form-control @error('issued_by') is-invalid @enderror" value="{{ old('issued_by', auth()->user()->firstname.' '.auth()->user()->lastname) }}" required>
+                    @error('issued_by')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Cross Ref / Form 208</label>
-                    <input type="text" name="cross_ref_form208" class="form-control" value="{{ old('cross_ref_form208') }}">
+                    <label class="form-label">Cross Ref / Form 208 *</label>
+                    <input type="text" name="cross_ref_form208" class="form-control @error('cross_ref_form208') is-invalid @enderror" value="{{ old('cross_ref_form208') }}" required>
+                    @error('cross_ref_form208')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
             </div>
             <div class="form-group">
-                <label class="form-label">Remarks</label>
-                <textarea name="remarks" class="form-control" rows="2">{{ old('remarks') }}</textarea>
+                <label class="form-label">Remarks *</label>
+                <textarea name="remarks" class="form-control @error('remarks') is-invalid @enderror" rows="2" required>{{ old('remarks') }}</textarea>
+                @error('remarks')<div class="invalid-feedback">{{ $message }}</div>@enderror
             </div>
         </div>
     </div>

@@ -16,20 +16,24 @@
                     <input type="text" name="asset_description" class="form-control" value="{{ old('asset_description', $disposal->asset_description) }}" required>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Asset Tag / Serial No.</label>
-                    <input type="text" name="asset_tag_serial_no" class="form-control" value="{{ old('asset_tag_serial_no', $disposal->asset_tag_serial_no) }}">
+                    <label class="form-label">Asset Tag / Serial No. *</label>
+                    <input type="text" name="asset_tag_serial_no" class="form-control @error('asset_tag_serial_no') is-invalid @enderror" value="{{ old('asset_tag_serial_no', $disposal->asset_tag_serial_no) }}" required>
+                    @error('asset_tag_serial_no')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Model / Brand</label>
-                    <input type="text" name="model_brand" class="form-control" value="{{ old('model_brand', $disposal->model_brand) }}">
+                    <label class="form-label">Model / Brand *</label>
+                    <input type="text" name="model_brand" class="form-control @error('model_brand') is-invalid @enderror" value="{{ old('model_brand', $disposal->model_brand) }}" required>
+                    @error('model_brand')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Department / User</label>
-                    <input type="text" name="department_user" class="form-control" value="{{ old('department_user', $disposal->department_user) }}">
+                    <label class="form-label">Department / User *</label>
+                    <input type="text" name="department_user" class="form-control @error('department_user') is-invalid @enderror" value="{{ old('department_user', $disposal->department_user) }}" required>
+                    @error('department_user')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Condition at Disposal</label>
-                    <input type="text" name="condition_at_disposal" class="form-control" value="{{ old('condition_at_disposal', $disposal->condition_at_disposal) }}">
+                    <label class="form-label">Condition at Disposal *</label>
+                    <input type="text" name="condition_at_disposal" class="form-control @error('condition_at_disposal') is-invalid @enderror" value="{{ old('condition_at_disposal', $disposal->condition_at_disposal) }}" required>
+                    @error('condition_at_disposal')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
                 <div class="form-group">
                     <label class="form-label">Disposal Method</label>
@@ -56,8 +60,9 @@
                 </label>
             </div>
             <div class="form-group">
-                <label class="form-label">Remarks</label>
-                <textarea name="remarks" class="form-control">{{ old('remarks', $disposal->remarks) }}</textarea>
+                <label class="form-label">Remarks *</label>
+                <textarea name="remarks" class="form-control @error('remarks') is-invalid @enderror" required>{{ old('remarks', $disposal->remarks) }}</textarea>
+                @error('remarks')<div class="invalid-feedback">{{ $message }}</div>@enderror
             </div>
             <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Changes</button>
             <a href="{{ route('disposal.show', $disposal) }}" class="btn btn-secondary">Cancel</a>
