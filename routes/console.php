@@ -10,3 +10,6 @@ Artisan::command('inspire', function () {
 
 // Schedule overdue reminders daily at 8am
 Schedule::command('ict:send-overdue-reminders')->dailyAt('08:00');
+
+// Automatic database backup every night at midnight
+Schedule::command('ict:auto-backup')->dailyAt('00:00');
