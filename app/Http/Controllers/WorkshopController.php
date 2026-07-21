@@ -51,6 +51,22 @@ class WorkshopController extends Controller
             $query->where('priority_level', $request->priority);
         }
 
+        if ($request->filled('date_from')) {
+            $query->whereDate('date_time_received', '>=', $request->date_from);
+        }
+
+        if ($request->filled('date_to')) {
+            $query->whereDate('date_time_received', '<=', $request->date_to);
+        }
+
+        if ($request->filled('depot')) {
+            $query->where('depot_name', $request->depot);
+        }
+
+        if ($request->filled('technician')) {
+            $query->where('technician_assigned', $request->technician);
+        }
+
         if ($request->filled('search')) {
             $q = $request->search;
             $query->where(function ($sq) use ($q) {
@@ -77,8 +93,13 @@ class WorkshopController extends Controller
 
         $jobs = $query->oldest()->paginate(15);
         $technicians = User::where('role', 'technician')->get();
+        $depots = WorkshopEquipmentRegister::whereNotNull('depot_name')
+            ->where('depot_name', '!=', '')
+            ->distinct()
+            ->orderBy('depot_name')
+            ->pluck('depot_name');
 
-        return view('workshop.index', compact('jobs', 'overdue', 'technicians', 'statusCounts'));
+        return view('workshop.index', compact('jobs', 'overdue', 'technicians', 'depots', 'statusCounts'));
     }
 
     public function lookupSerial(Request $request)

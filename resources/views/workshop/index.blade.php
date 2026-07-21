@@ -73,6 +73,34 @@
             @endforeach
         </select>
     </div>
+    <div class="form-group">
+        <label class="form-label">Date From</label>
+        <input type="date" name="date_from" class="form-control" value="{{ request('date_from') }}">
+    </div>
+    <div class="form-group">
+        <label class="form-label">Date To</label>
+        <input type="date" name="date_to" class="form-control" value="{{ request('date_to') }}">
+    </div>
+    <div class="form-group">
+        <label class="form-label">Depot</label>
+        <select name="depot" class="form-control">
+            <option value="">All Depots</option>
+            @foreach($depots as $d)
+            <option value="{{ $d }}" {{ request('depot') === $d ? 'selected' : '' }}>{{ $d }}</option>
+            @endforeach
+        </select>
+    </div>
+    @if(auth()->user()->isAdminOrHod())
+    <div class="form-group">
+        <label class="form-label">Technician</label>
+        <select name="technician" class="form-control">
+            <option value="">All Technicians</option>
+            @foreach($technicians as $tech)
+            <option value="{{ $tech->id }}" {{ request('technician') == $tech->id ? 'selected' : '' }}>{{ $tech->firstname }} {{ $tech->lastname }}</option>
+            @endforeach
+        </select>
+    </div>
+    @endif
     <div class="form-group" style="align-self:flex-end;display:flex;gap:6px;flex-wrap:wrap;">
         <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i> Filter</button>
         <a href="{{ route('workshop.index') }}" class="btn btn-secondary">Clear</a>

@@ -26,7 +26,7 @@ class ReportExportController extends Controller
         $format  = $request->input('format', 'csv');
         $file    = 'workshop-register-' . now()->format('Y-m-d');
         $title   = 'ICT Workshop Equipment Register';
-        $filters = $request->only(['status', 'priority', 'search']);
+        $filters = $request->only(['status', 'priority', 'date_from', 'date_to', 'depot', 'technician', 'search']);
 
         return match ($format) {
             'csv'   => $this->csvDownload($data, $this->workshopHeaders(), fn($r) => $this->workshopRow($r), $file),
@@ -47,6 +47,10 @@ class ReportExportController extends Controller
         }
         if ($request->filled('status'))   $query->where('status', $request->status);
         if ($request->filled('priority')) $query->where('priority_level', $request->priority);
+        if ($request->filled('date_from')) $query->whereDate('date_time_received', '>=', $request->date_from);
+        if ($request->filled('date_to'))   $query->whereDate('date_time_received', '<=', $request->date_to);
+        if ($request->filled('depot'))     $query->where('depot_name', $request->depot);
+        if ($request->filled('technician')) $query->where('technician_assigned', $request->technician);
         if ($request->filled('search')) {
             $q = $request->search;
             $query->where(fn($sq) => $sq
