@@ -91,7 +91,17 @@ class WorkshopController extends Controller
             ->groupBy('status')
             ->pluck('total', 'status');
 
-        $jobs = $query->oldest()->paginate(15);
+        $sortable = ['job_number' => 'entry_job_number', 'date_received' => 'date_time_received'];
+        $sort = $request->query('sort');
+        $direction = $request->query('direction') === 'desc' ? 'desc' : 'asc';
+
+        if ($sort && isset($sortable[$sort])) {
+            $query->orderBy($sortable[$sort], $direction);
+        } else {
+            $query->oldest();
+        }
+
+        $jobs = $query->paginate(15);
         $technicians = User::where('role', 'technician')->get();
         $depots = WorkshopEquipmentRegister::whereNotNull('depot_name')
             ->where('depot_name', '!=', '')

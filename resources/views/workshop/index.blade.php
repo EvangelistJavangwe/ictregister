@@ -125,10 +125,27 @@
 
 <div class="card">
     <div class="table-wrap">
+        @php
+            $sortLink = function ($column, $label) {
+                $dir = (request('sort') === $column && request('direction', 'asc') === 'asc') ? 'desc' : 'asc';
+                $url = route('workshop.index', array_merge(request()->query(), ['sort' => $column, 'direction' => $dir]));
+                if (request('sort') === $column) {
+                    $icon = request('direction', 'asc') === 'asc' ? 'fa-sort-up' : 'fa-sort-down';
+                    $iconStyle = 'color:#2563eb;';
+                } else {
+                    $icon = 'fa-sort';
+                    $iconStyle = 'color:#cbd5e1;';
+                }
+                return '<a href="' . $url . '" style="color:inherit;text-decoration:none;display:inline-flex;align-items:center;gap:5px;">'
+                    . e($label) . '<i class="fas ' . $icon . '" style="' . $iconStyle . 'font-size:.75rem;"></i></a>';
+            };
+        @endphp
         <table>
             <thead>
                 <tr>
-                    <th>Job Number</th><th>Date Received</th><th>Equipment</th><th>Depot/Dept/Contact</th><th>Serial/Asset</th>
+                    <th>{!! $sortLink('job_number', 'Job Number') !!}</th>
+                    <th>{!! $sortLink('date_received', 'Date Received') !!}</th>
+                    <th>Equipment</th><th>Depot/Dept/Contact</th><th>Serial/Asset</th>
                     <th>Priority</th><th>Technician</th><th>Status</th><th>Due Date</th><th>Actions</th>
                 </tr>
             </thead>
