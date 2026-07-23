@@ -11,7 +11,7 @@ class WorkshopEquipmentRegister extends Model
 
     protected $fillable = [
         'entry_job_number', 'cross_ref_form208', 'date_time_received',
-        'depot_name', 'department', 'contact_person', 'phone_number',
+        'depot_name', 'final_depot', 'department', 'contact_person', 'phone_number',
         'equipment_type', 'brand_make_model', 'serial_number_asset_tag',
         'accessories_received', 'nature_of_fault', 'physical_condition_on_receipt',
         'technician_assigned', 'repair_action_taken', 'date_repair_completed',

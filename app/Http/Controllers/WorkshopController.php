@@ -119,6 +119,24 @@ class WorkshopController extends Controller
             return response()->json(['found' => false]);
         }
 
+        // Always check for a prior workshop job on this serial — regardless of whether it's
+        // also in the Helpdesk Registry — so a technician entering a new job is warned if
+        // someone already logged this exact device, and told who handled it.
+        $priorJob = WorkshopEquipmentRegister::where('serial_number_asset_tag', $serial)
+            ->with('technician')
+            ->latest()
+            ->first();
+
+        $priorWorkshopJob = $priorJob ? [
+            'job_number'      => $priorJob->entry_job_number,
+            'technician'      => $priorJob->technician
+                ? trim($priorJob->technician->firstname . ' ' . $priorJob->technician->lastname)
+                : 'Unassigned',
+            'status'          => $priorJob->status,
+            'date_received'   => $priorJob->date_time_received?->format('d M Y'),
+            'nature_of_fault' => $priorJob->nature_of_fault,
+        ] : null;
+
         // Search in the serial_numbers JSON array (exact match, case-insensitive)
         $record = EquipmentReceivingRegister::where(function ($q) use ($serial) {
             $q->whereJsonContains('serial_numbers', $serial)
@@ -133,34 +151,32 @@ class WorkshopController extends Controller
                 ->first(fn($r) => in_array($serial, $r->serial_numbers ?? []));
 
             return response()->json([
-                'found'          => true,
-                'source'         => 'registry',
-                'equipment_type' => $record->item_description,
-                'brand_model'    => $record->brand_model ?? '',
-                'assigned_to'    => $latestRedist ? $latestRedist->recipient_name : null,
-                'depot'          => $latestRedist ? $latestRedist->depot_department : null,
+                'found'              => true,
+                'source'             => 'registry',
+                'equipment_type'     => $record->item_description,
+                'brand_model'        => $record->brand_model ?? '',
+                'assigned_to'        => $latestRedist ? $latestRedist->recipient_name : null,
+                'depot'              => $latestRedist ? $latestRedist->depot_department : null,
+                'prior_workshop_job' => $priorWorkshopJob,
             ]);
         }
 
-        // Not part of the Helpdesk Registry — fall back to a prior Workshop job for
-        // this serial, so equipment that was logged directly at the workshop (never
-        // received via Helpdesk intake) is still recognised on a repeat visit.
-        $priorJob = WorkshopEquipmentRegister::where('serial_number_asset_tag', $serial)
-            ->latest()
-            ->first();
-
+        // Not part of the Helpdesk Registry — fall back to the prior Workshop job itself
+        // for auto-fill, so equipment logged directly at the workshop (never received via
+        // Helpdesk intake) is still recognised on a repeat visit.
         if (!$priorJob) {
             return response()->json(['found' => false]);
         }
 
         return response()->json([
-            'found'          => true,
-            'source'         => 'workshop',
-            'equipment_type' => $priorJob->equipment_type,
-            'brand_model'    => $priorJob->brand_make_model ?? '',
-            'assigned_to'    => $priorJob->contact_person,
-            'depot'          => $priorJob->department,
-            'last_job'       => $priorJob->entry_job_number,
+            'found'              => true,
+            'source'             => 'workshop',
+            'equipment_type'     => $priorJob->equipment_type,
+            'brand_model'        => $priorJob->brand_make_model ?? '',
+            'assigned_to'        => $priorJob->contact_person,
+            'depot'              => $priorJob->department,
+            'last_job'           => $priorJob->entry_job_number,
+            'prior_workshop_job' => $priorWorkshopJob,
         ]);
     }
 
@@ -182,6 +198,7 @@ class WorkshopController extends Controller
             'brand_make_model'         => 'required|string|max:150',
             'serial_number_asset_tag'  => 'required|string|max:100',
             'depot_name'               => 'required|string|max:100',
+            'final_depot'              => 'nullable|string|max:100',
             'department'               => 'required|string|max:100',
             'physical_condition_on_receipt' => 'required|string|max:200',
             'accessories_received'     => 'required|string',
@@ -198,7 +215,7 @@ class WorkshopController extends Controller
             ...$request->only([
                 'date_time_received', 'equipment_type', 'nature_of_fault', 'priority_level',
                 'contact_person', 'phone_number', 'brand_make_model', 'serial_number_asset_tag',
-                'depot_name', 'department', 'physical_condition_on_receipt', 'accessories_received',
+                'depot_name', 'final_depot', 'department', 'physical_condition_on_receipt', 'accessories_received',
                 'due_date', 'cross_ref_form208',
             ]),
             'technician_assigned' => $technicianAssigned,
@@ -259,6 +276,7 @@ class WorkshopController extends Controller
             'collector_name'           => 'nullable|string|max:100',
             'collector_signature'      => 'nullable|string',
             'remarks_comments'         => 'nullable|string',
+            'final_depot'              => 'nullable|string|max:100',
         ]);
 
         $old = $workshop->status;
@@ -277,7 +295,7 @@ class WorkshopController extends Controller
                 'repair_action_taken', 'date_repair_completed',
                 'technician_assigned', 'time_taken_value', 'time_taken_unit',
                 'cross_ref_form208_outgoing', 'date_collected', 'collector_name',
-                'collector_signature', 'remarks_comments',
+                'collector_signature', 'remarks_comments', 'final_depot',
             ]),
             'status'     => $status,
             'updated_by' => auth()->id(),

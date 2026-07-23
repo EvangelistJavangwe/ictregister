@@ -40,6 +40,7 @@
                     </div>
                     @error('serial_number_asset_tag')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     <div id="serial-lookup-result" style="display:none;margin-top:6px;padding:8px 12px;border-radius:8px;font-size:.8rem;"></div>
+                    <div id="duplicate-job-alert" style="display:none;margin-top:6px;padding:10px 12px;border-radius:8px;font-size:.82rem;background:#fee2e2;border:1px solid #fca5a5;color:#991b1b;font-weight:600;"></div>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Cross Ref / Form 208 *</label>
@@ -60,6 +61,11 @@
                     <label class="form-label">Depot Name *</label>
                     <input type="text" name="depot_name" class="form-control @error('depot_name') is-invalid @enderror" value="{{ old('depot_name') }}" required>
                     @error('depot_name')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Final Depot <span style="color:#94a3b8;font-weight:400;">(if heading elsewhere after repair)</span></label>
+                    <input type="text" name="final_depot" class="form-control @error('final_depot') is-invalid @enderror" value="{{ old('final_depot') }}" placeholder="Leave blank to return to Depot Name above">
+                    @error('final_depot')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
                 <div class="form-group">
                     <label class="form-label">Department *</label>
@@ -134,6 +140,7 @@
     const deptInput    = document.querySelector('input[name="department"]');
     const spinner      = document.getElementById('serial-spinner');
     const resultBox    = document.getElementById('serial-lookup-result');
+    const dupAlert     = document.getElementById('duplicate-job-alert');
     const lookupUrl    = '{{ route("workshop.lookup-serial") }}';
 
     let debounceTimer;
@@ -165,10 +172,25 @@
         resultBox.innerHTML = '';
     }
 
+    function showDuplicateAlert(job) {
+        dupAlert.style.display = 'block';
+        dupAlert.innerHTML =
+            '<i class="fas fa-triangle-exclamation"></i> This device was already logged before! Job <strong>' + job.job_number + '</strong>'
+            + ' handled by <strong>' + job.technician + '</strong>'
+            + ' &mdash; status: <strong>' + job.status + '</strong>'
+            + (job.date_received ? ' (received ' + job.date_received + ')' : '')
+            + '. Please confirm this isn\'t a duplicate entry before proceeding.';
+    }
+
+    function clearDuplicateAlert() {
+        dupAlert.style.display = 'none';
+        dupAlert.innerHTML = '';
+    }
+
     serialInput.addEventListener('input', function () {
         clearTimeout(debounceTimer);
         const val = this.value.trim();
-        if (val.length < 3) { clearResult(); return; }
+        if (val.length < 3) { clearResult(); clearDuplicateAlert(); return; }
 
         debounceTimer = setTimeout(function () {
             spinner.style.display = 'block';
@@ -178,6 +200,13 @@
             .then(r => r.json())
             .then(data => {
                 spinner.style.display = 'none';
+
+                if (data.prior_workshop_job) {
+                    showDuplicateAlert(data.prior_workshop_job);
+                } else {
+                    clearDuplicateAlert();
+                }
+
                 if (!data.found) {
                     showResult('<i class="fas fa-info-circle"></i> Serial not found in the equipment register or workshop history — fill in details manually.', 'info');
                     return;

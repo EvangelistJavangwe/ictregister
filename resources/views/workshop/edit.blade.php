@@ -80,6 +80,11 @@
             </div>
             <div class="form-row">
                 <div class="form-group">
+                    <label class="form-label">Final Depot <span style="color:#94a3b8;font-weight:400;">(if heading elsewhere after repair)</span></label>
+                    <input type="text" name="final_depot" class="form-control @error('final_depot') is-invalid @enderror" value="{{ old('final_depot', $workshop->final_depot) }}" placeholder="Leave blank to return to {{ $workshop->depot_name }}">
+                    @error('final_depot')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                </div>
+                <div class="form-group">
                     <label class="form-label">Date Collected</label>
                     <input type="date" name="date_collected" id="date_collected" class="form-control" value="{{ $workshop->date_collected?->format('Y-m-d') }}">
                 </div>
