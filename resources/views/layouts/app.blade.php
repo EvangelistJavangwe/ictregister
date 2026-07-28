@@ -182,15 +182,15 @@
             </a>
 
             <div class="nav-section">Registers</div>
-            <a href="{{ route('workshop.index') }}" class="nav-item {{ request()->routeIs('workshop.*') ? 'active' : '' }}">
-                <i class="fas fa-tools"></i> Workshop Register
-            </a>
-
             @if(auth()->user()->isAdminOrHod())
             <a href="{{ route('equipment-receiving.index') }}" class="nav-item {{ request()->routeIs('equipment-receiving.*') ? 'active' : '' }}">
                 <i class="fas fa-box-open"></i> Helpdesk Administrator
             </a>
             @endif
+
+            <a href="{{ route('workshop.index') }}" class="nav-item {{ request()->routeIs('workshop.*') ? 'active' : '' }}">
+                <i class="fas fa-tools"></i> Workshop Register
+            </a>
 
             <a href="{{ route('disposal.index') }}" class="nav-item {{ request()->routeIs('disposal.*') ? 'active' : '' }}">
                 <i class="fas fa-trash-alt"></i>
