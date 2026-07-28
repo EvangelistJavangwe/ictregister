@@ -73,8 +73,8 @@
                     @error('department')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Contact Person *</label>
-                    <input type="text" name="contact_person" class="form-control @error('contact_person') is-invalid @enderror" value="{{ old('contact_person') }}" required>
+                    <label class="form-label">Extension Number *</label>
+                    <input type="text" name="contact_person" class="form-control @error('contact_person') is-invalid @enderror" value="{{ old('contact_person') }}" placeholder="e.g. 1205" maxlength="4" pattern="\d{4}" inputmode="numeric" title="Enter a 4-digit extension number" required>
                     @error('contact_person')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
                 <div class="form-group">

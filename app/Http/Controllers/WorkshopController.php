@@ -193,7 +193,7 @@ class WorkshopController extends Controller
             'equipment_type'           => 'required|string|max:150',
             'nature_of_fault'          => 'required|string',
             'priority_level'           => 'required|in:Low,Medium,High,Urgent',
-            'contact_person'           => 'required|string|max:100',
+            'contact_person'           => 'required|digits:4',
             'phone_number'             => 'required|string|max:20',
             'brand_make_model'         => 'required|string|max:150',
             'serial_number_asset_tag'  => 'required|string|max:100',

@@ -145,7 +145,7 @@
                 <tr>
                     <th>{!! $sortLink('job_number', 'Job Number') !!}</th>
                     <th>{!! $sortLink('date_received', 'Date Received') !!}</th>
-                    <th>Equipment</th><th>Depot/Dept/Contact</th><th>Serial/Asset</th>
+                    <th>Equipment</th><th>Depot/Dept/Ext</th><th>Serial/Asset</th>
                     <th>Priority</th><th>Technician</th><th>Status</th><th>Due Date</th><th>Actions</th>
                 </tr>
             </thead>

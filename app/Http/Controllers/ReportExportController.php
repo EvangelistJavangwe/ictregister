@@ -68,7 +68,7 @@ class ReportExportController extends Controller
     {
         return [
             'Job No.', 'Date Received', 'Equipment Type', 'Brand / Model',
-            'Serial / Asset Tag', 'Department', 'Contact Person', 'Phone',
+            'Serial / Asset Tag', 'Department', 'Extension Number', 'Phone',
             'Nature of Fault', 'Priority', 'Technician', 'Status',
             'Due Date', 'Date Repair Completed', 'Date Collected', 'Repair Action Taken',
         ];

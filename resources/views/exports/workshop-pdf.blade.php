@@ -53,7 +53,7 @@
             <th>Brand / Model</th>
             <th>Serial / Asset Tag</th>
             <th>Department</th>
-            <th>Contact</th>
+            <th>Ext. Number</th>
             <th>Nature of Fault</th>
             <th>Priority</th>
             <th>Technician</th>

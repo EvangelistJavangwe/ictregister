@@ -50,7 +50,7 @@
         <div class="detail-grid">
             <div class="detail-item"><div class="detail-label">Depot Name</div><div class="detail-value">{{ $workshop->depot_name ?? '—' }}</div></div>
             <div class="detail-item"><div class="detail-label">Department</div><div class="detail-value">{{ $workshop->department ?? '—' }}</div></div>
-            <div class="detail-item"><div class="detail-label">Contact Person</div><div class="detail-value">{{ $workshop->contact_person ?? '—' }}</div></div>
+            <div class="detail-item"><div class="detail-label">Extension Number</div><div class="detail-value">{{ $workshop->contact_person ?? '—' }}</div></div>
             <div class="detail-item"><div class="detail-label">Phone Number</div><div class="detail-value">{{ $workshop->phone_number ?? '—' }}</div></div>
         </div>
     </div>
