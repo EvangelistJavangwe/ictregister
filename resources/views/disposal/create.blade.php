@@ -168,10 +168,12 @@
                 if (!deptInput.dataset.manual)  { deptInput.value  = data.department_user    || ''; greyOut(deptInput);  }
                 if (!dateInput.dataset.manual)  { dateInput.value  = data.date_acquired      || ''; greyOut(dateInput);  }
 
+                const fromWorkshop = data.source === 'workshop';
                 showResult(
-                    '<i class="fas fa-check-circle"></i> Found: <strong>' + data.asset_description + '</strong>'
+                    '<i class="fas fa-check-circle"></i> Found' + (fromWorkshop ? ' in workshop history' : '') + ': <strong>' + data.asset_description + '</strong>'
                     + (data.model_brand     ? ' &mdash; ' + data.model_brand                   : '')
-                    + (data.department_user ? ' &nbsp;|&nbsp; <strong>Currently with:</strong> ' + data.department_user : ''),
+                    + (data.department_user ? ' &nbsp;|&nbsp; <strong>Currently with:</strong> ' + data.department_user : '')
+                    + (fromWorkshop ? ' <span style="color:#94a3b8;">(not in Helpdesk Registry)</span>' : ''),
                     'success'
                 );
             })

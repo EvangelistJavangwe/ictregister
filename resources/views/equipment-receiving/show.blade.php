@@ -98,6 +98,7 @@
         <div class="detail-grid">
             <div class="detail-item"><div class="detail-label">Item Description</div><div class="detail-value">{{ $equipmentReceiving->item_description }}</div></div>
             <div class="detail-item"><div class="detail-label">Brand / Model</div><div class="detail-value">{{ $equipmentReceiving->brand_model ?? '—' }}</div></div>
+            <div class="detail-item"><div class="detail-label">Cost Price</div><div class="detail-value">{{ $equipmentReceiving->cost_price !== null ? 'USD '.number_format($equipmentReceiving->cost_price, 2) : '—' }}</div></div>
             <div class="detail-item">
                 <div class="detail-label">Serial Numbers <span class="text-muted" style="font-weight:400;">(available in stock)</span></div>
                 <div class="detail-value">

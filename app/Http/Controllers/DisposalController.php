@@ -6,6 +6,7 @@ use App\Models\AuditTrail;
 use App\Models\EquipmentDisposal;
 use App\Models\EquipmentHistory;
 use App\Models\EquipmentReceivingRegister;
+use App\Models\WorkshopEquipmentRegister;
 use Illuminate\Http\Request;
 
 class DisposalController extends Controller
@@ -22,30 +23,49 @@ class DisposalController extends Controller
               ->orWhere('serial_number', $serial);
         })->latest()->first();
 
-        if (!$record) {
+        if ($record) {
+            // Most recent redistribution containing this serial
+            $latestRedist = $record->redistributions()
+                ->latest()
+                ->get()
+                ->first(fn($r) => in_array($serial, $r->serial_numbers ?? []));
+
+            $departmentUser = null;
+            if ($latestRedist) {
+                $departmentUser = $latestRedist->recipient_name;
+                if ($latestRedist->depot_department) {
+                    $departmentUser .= ' — ' . $latestRedist->depot_department;
+                }
+            }
+
+            return response()->json([
+                'found'             => true,
+                'source'            => 'registry',
+                'asset_description' => $record->item_description,
+                'model_brand'       => $record->brand_model ?? '',
+                'department_user'   => $departmentUser ?? '',
+                'date_acquired'     => $record->date_received?->format('Y-m-d') ?? '',
+            ]);
+        }
+
+        // Not part of the Helpdesk Registry — fall back to a Workshop job for this serial,
+        // so equipment that was only ever logged directly at the workshop (never formally
+        // received) can still be recognised when it finally comes up for disposal.
+        $job = WorkshopEquipmentRegister::where('serial_number_asset_tag', $serial)->latest()->first();
+
+        if (!$job) {
             return response()->json(['found' => false]);
         }
 
-        // Most recent redistribution containing this serial
-        $latestRedist = $record->redistributions()
-            ->latest()
-            ->get()
-            ->first(fn($r) => in_array($serial, $r->serial_numbers ?? []));
-
-        $departmentUser = null;
-        if ($latestRedist) {
-            $departmentUser = $latestRedist->recipient_name;
-            if ($latestRedist->depot_department) {
-                $departmentUser .= ' — ' . $latestRedist->depot_department;
-            }
-        }
+        $departmentUser = trim($job->department . ($job->contact_person ? " (Ext. {$job->contact_person})" : ''));
 
         return response()->json([
-            'found'            => true,
-            'asset_description'=> $record->item_description,
-            'model_brand'      => $record->brand_model ?? '',
-            'department_user'  => $departmentUser ?? '',
-            'date_acquired'    => $record->date_received?->format('Y-m-d') ?? '',
+            'found'             => true,
+            'source'            => 'workshop',
+            'asset_description' => $job->equipment_type,
+            'model_brand'       => $job->brand_make_model ?? '',
+            'department_user'   => $departmentUser ?: ($job->depot_name ?? ''),
+            'date_acquired'     => $job->date_time_received?->format('Y-m-d') ?? '',
         ]);
     }
 

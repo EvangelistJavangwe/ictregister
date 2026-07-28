@@ -78,6 +78,12 @@
                         value="{{ old('qty_received', 1) }}" min="1" required oninput="updateSerialFields()">
                     @error('qty_received')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
+                <div class="form-group">
+                    <label class="form-label">Cost Price (USD)</label>
+                    <input type="number" name="cost_price" class="form-control @error('cost_price') is-invalid @enderror"
+                        value="{{ old('cost_price') }}" step="0.01" min="0" placeholder="e.g. 850.00">
+                    @error('cost_price')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                </div>
             </div>
             {{-- Dynamic serial number fields --}}
             <div class="form-group" id="serial-numbers-section">

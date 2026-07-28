@@ -11,7 +11,7 @@ class EquipmentReceivingRegister extends Model
 
     protected $fillable = [
         'cross_ref_no', 'date_received', 'supplier', 'delivery_note_no', 'po_no',
-        'item_description', 'brand_model', 'serial_number', 'serial_numbers', 'qty_received',
+        'item_description', 'brand_model', 'cost_price', 'serial_number', 'serial_numbers', 'qty_received',
         'accessories_included', 'user_signature', 'inspector_signature',
         'status', 'remarks', 'created_by', 'updated_by',
         'warranty_start_date', 'warranty_end_date', 'warranty_notes', 'warranty_expiry_logged',
@@ -22,6 +22,7 @@ class EquipmentReceivingRegister extends Model
         return [
             'date_received'          => 'date',
             'qty_received'           => 'integer',
+            'cost_price'             => 'decimal:2',
             'serial_numbers'         => 'array',
             'warranty_start_date'    => 'date',
             'warranty_end_date'      => 'date',

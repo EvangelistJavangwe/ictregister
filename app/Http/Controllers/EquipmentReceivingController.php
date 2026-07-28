@@ -59,6 +59,7 @@ class EquipmentReceivingController extends Controller
             'delivery_note_no'     => 'required|string|max:100',
             'po_no'                => 'required|string|max:100',
             'brand_model'          => 'required|string|max:150',
+            'cost_price'           => 'nullable|numeric|min:0',
             'serial_numbers'       => 'nullable|array',
             'serial_numbers.*'     => 'nullable|string|max:100',
             'accessories_included' => 'required|string',
@@ -75,7 +76,7 @@ class EquipmentReceivingController extends Controller
         $record = EquipmentReceivingRegister::create([
             ...$request->only([
                 'date_received', 'supplier', 'item_description', 'qty_received',
-                'delivery_note_no', 'po_no', 'brand_model',
+                'delivery_note_no', 'po_no', 'brand_model', 'cost_price',
                 'accessories_included', 'user_signature', 'inspector_signature', 'remarks',
                 'warranty_start_date', 'warranty_end_date', 'warranty_notes',
             ]),
@@ -153,6 +154,7 @@ class EquipmentReceivingController extends Controller
             'delivery_note_no'    => 'required|string|max:100',
             'po_no'               => 'required|string|max:100',
             'brand_model'         => 'required|string|max:150',
+            'cost_price'          => 'nullable|numeric|min:0',
             'accessories_included' => 'required|string',
             'remarks'             => 'required|string',
             'warranty_start_date' => 'nullable|date',
@@ -166,7 +168,7 @@ class EquipmentReceivingController extends Controller
         $equipmentReceiving->update([
             ...$request->only([
                 'date_received', 'supplier', 'item_description', 'qty_received',
-                'delivery_note_no', 'po_no', 'brand_model', 'serial_number',
+                'delivery_note_no', 'po_no', 'brand_model', 'cost_price', 'serial_number',
                 'accessories_included', 'remarks',
                 'warranty_start_date', 'warranty_end_date', 'warranty_notes',
             ]),

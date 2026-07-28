@@ -188,7 +188,7 @@ class ReportExportController extends Controller
     {
         return [
             'Ref No.', 'Date Received', 'Supplier', 'Delivery Note', 'PO No.',
-            'Item Description', 'Brand / Model', 'Qty Received',
+            'Item Description', 'Brand / Model', 'Cost Price (USD)', 'Qty Received',
             'Qty Inspected', 'Qty Redistributed', 'Available Stock', 'Stock Status',
             'Serial Numbers',
         ];
@@ -214,6 +214,7 @@ class ReportExportController extends Controller
             $r->po_no ?? '',
             $r->item_description,
             $r->brand_model ?? '',
+            $r->cost_price !== null ? number_format($r->cost_price, 2) : '',
             $r->qty_received,
             $inspected,
             $redistributed,

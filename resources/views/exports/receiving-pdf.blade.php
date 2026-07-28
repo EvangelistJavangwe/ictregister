@@ -46,6 +46,7 @@
             <th>Supplier</th>
             <th>Item Description</th>
             <th>Brand / Model</th>
+            <th class="num">Cost (USD)</th>
             <th class="num">Rcvd</th>
             <th class="num">Insp.</th>
             <th class="num">Redist.</th>
@@ -70,6 +71,7 @@
         <td>{{ $r->supplier }}</td>
         <td>{{ $r->item_description }}</td>
         <td>{{ $r->brand_model ?? '—' }}</td>
+        <td class="num">{{ $r->cost_price !== null ? number_format($r->cost_price, 2) : '—' }}</td>
         <td class="num">{{ $r->qty_received }}</td>
         <td class="num">{{ $inspected }}</td>
         <td class="num">{{ $redistributed }}</td>
