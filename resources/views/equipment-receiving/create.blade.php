@@ -87,11 +87,13 @@
             </div>
             {{-- Dynamic serial number fields --}}
             <div class="form-group" id="serial-numbers-section">
-                <label class="form-label">Serial Numbers <span class="text-muted text-sm" id="serial-hint">(one per unit)</span></label>
+                <label class="form-label">Serial Numbers * <span class="text-muted text-sm" id="serial-hint">(one per unit)</span></label>
                 <div id="serial-fields">
-                    <input type="text" name="serial_numbers[]" class="form-control mb-1" placeholder="Serial number 1">
+                    <input type="text" name="serial_numbers[]" class="form-control mb-1 @error('serial_numbers.0') is-invalid @enderror" value="{{ old('serial_numbers.0') }}" placeholder="Serial number 1" required>
                 </div>
-                <div class="text-sm text-muted mt-1">Enter a serial number for each unit received. Leave blank if not applicable.</div>
+                @error('serial_numbers')<div class="invalid-feedback" style="display:block;">{{ $message }}</div>@enderror
+                @error('serial_numbers.*')<div class="invalid-feedback" style="display:block;">Every serial number field must be filled in.</div>@enderror
+                <div class="text-sm text-muted mt-1">Enter a serial number for each unit received — required for every unit.</div>
             </div>
 
             <div class="form-group">
@@ -168,6 +170,8 @@
 
 @push('scripts')
 <script>
+const oldSerials = @json(old('serial_numbers', []));
+
 function updateSerialFields() {
     const qty = parseInt(document.getElementById('qty_received').value) || 1;
     const container = document.getElementById('serial-fields');
@@ -181,6 +185,8 @@ function updateSerialFields() {
         inp.name = 'serial_numbers[]';
         inp.className = 'form-control mb-1';
         inp.placeholder = `Serial number ${i + 1}`;
+        inp.required = true;
+        if (oldSerials[i]) inp.value = oldSerials[i];
         container.appendChild(inp);
     }
     // Remove extra fields

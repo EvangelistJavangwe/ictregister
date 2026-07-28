@@ -217,6 +217,9 @@
             @endif
 
             <div class="nav-section">Account</div>
+            <a href="{{ route('profile.edit') }}" class="nav-item {{ request()->routeIs('profile.edit') ? 'active' : '' }}">
+                <i class="fas fa-id-badge"></i> My Profile
+            </a>
             <a href="{{ route('mfa.setup') }}" class="nav-item {{ request()->routeIs('mfa.*') ? 'active' : '' }}">
                 <i class="fas fa-shield-alt"></i> 2FA Security
             </a>

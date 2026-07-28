@@ -47,6 +47,10 @@ Route::middleware('auth')->group(function () {
 Route::middleware(['auth', 'mfa', 'force.password'])->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
+    // Self-service profile — every authenticated user can edit their own info, never their role.
+    Route::get('/profile', [AuthController::class, 'editProfile'])->name('profile.edit');
+    Route::put('/profile', [AuthController::class, 'updateProfile'])->name('profile.update');
+
     // Report exports (must be before resource routes so 'export' isn't treated as a record ID)
     Route::get('workshop/lookup-serial', [WorkshopController::class, 'lookupSerial'])->name('workshop.lookup-serial');
     Route::get('workshop/export', [ReportExportController::class, 'workshop'])->name('workshop.export');

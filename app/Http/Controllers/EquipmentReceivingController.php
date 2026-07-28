@@ -60,8 +60,15 @@ class EquipmentReceivingController extends Controller
             'po_no'                => 'required|string|max:100',
             'brand_model'          => 'required|string|max:150',
             'cost_price'           => 'nullable|numeric|min:0',
-            'serial_numbers'       => 'nullable|array',
-            'serial_numbers.*'     => 'nullable|string|max:100',
+            'serial_numbers'       => [
+                'required', 'array', 'min:1',
+                function ($attribute, $value, $fail) use ($request) {
+                    if (count($value) < (int) $request->qty_received) {
+                        $fail('Please provide a serial number for every unit received.');
+                    }
+                },
+            ],
+            'serial_numbers.*'     => 'required|string|max:100',
             'accessories_included' => 'required|string',
             'user_signature'       => 'nullable|string',
             'inspector_signature'  => 'nullable|string',

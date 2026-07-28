@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 use BaconQrCode\Renderer\Image\SvgImageBackEnd;
 use BaconQrCode\Renderer\ImageRenderer;
@@ -255,6 +256,32 @@ class AuthController extends Controller
         AuditTrail::log('password_changed', 'Auth', "User {$user->username} changed their password", 'success');
 
         return redirect()->route('dashboard')->with('success', 'Password changed successfully.');
+    }
+
+    public function editProfile()
+    {
+        return view('auth.profile', ['user' => auth()->user()]);
+    }
+
+    public function updateProfile(Request $request)
+    {
+        $user = auth()->user();
+
+        $request->validate([
+            'firstname' => 'required|string|max:100',
+            'lastname'  => 'required|string|max:100',
+            'email'     => ['required', 'email', Rule::unique('users')->ignore($user->id)],
+            'phone'     => 'required|string|max:20',
+        ]);
+
+        // Deliberately not mass-assigned: role, username, employee_number, designation
+        // and is_blocked are account-governance fields, editable only by hod/super_admin
+        // via the admin Users screen — a user must never be able to change their own role.
+        $user->update($request->only('firstname', 'lastname', 'email', 'phone'));
+
+        AuditTrail::log('update_profile', 'Users', "User {$user->username} updated their own profile", 'success', $user->id);
+
+        return redirect()->route('profile.edit')->with('success', 'Profile updated successfully.');
     }
 
     public function showForgotPassword()
