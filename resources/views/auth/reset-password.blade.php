@@ -9,12 +9,12 @@
         <label class="form-label">Email Address</label>
         <div class="input-wrap">
             <i class="fas fa-envelope input-icon"></i>
-            <input type="email" name="email" class="form-control" value="{{ session('otp_email') ?? old('email') }}" required>
+            <input type="email" name="email" class="form-control" value="{{ old('email') ?? $linkEmail ?? session('otp_email') }}" required>
         </div>
     </div>
     <div class="form-group">
         <label class="form-label">OTP Code (from email)</label>
-        <input type="text" name="otp" class="form-control no-icon" maxlength="6" placeholder="Enter 6-digit OTP" required style="text-align:center;letter-spacing:.2em;font-size:1.1rem;">
+        <input type="text" name="otp" class="form-control no-icon" maxlength="6" placeholder="Enter 6-digit OTP" required style="text-align:center;letter-spacing:.2em;font-size:1.1rem;" value="{{ old('otp') ?? $linkOtp }}">
     </div>
     <div class="form-group">
         <label class="form-label">New Password</label>

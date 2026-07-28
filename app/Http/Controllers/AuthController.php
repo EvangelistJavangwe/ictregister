@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\PasswordResetOtpMail;
 use App\Models\AuditTrail;
 use App\Models\OtpToken;
 use App\Models\User;
@@ -278,10 +279,12 @@ class AuthController extends Controller
             'ip_address' => $request->ip(),
         ]);
 
+        $resetUrl = route('password.reset.otp', ['email' => $user->email, 'otp' => $otp]);
+
         try {
-            Mail::raw("Your password reset OTP is: {$otp}\n\nThis OTP expires in 15 minutes.\n\nDo not share this with anyone.", function ($message) use ($user) {
-                $message->to($user->email)->subject('Password Reset OTP - ICT Register');
-            });
+            Mail::to($user->email)->send(new PasswordResetOtpMail(
+                $user, $otp, $resetUrl, 15, $request->ip(), now()->format('d M Y, H:i')
+            ));
         } catch (\Exception $e) {
             // Log but don't expose mail errors
         }
@@ -292,9 +295,14 @@ class AuthController extends Controller
             ->with(['otp_email' => $user->email, 'success' => 'OTP sent to your email address.']);
     }
 
-    public function showResetWithOtp()
+    public function showResetWithOtp(Request $request)
     {
-        return view('auth.reset-password');
+        // Pre-fill email/OTP when the technician arrives via the emailed reset link,
+        // so clicking the link is enough — typing the OTP by hand stays available too.
+        return view('auth.reset-password', [
+            'linkEmail' => $request->query('email'),
+            'linkOtp'   => $request->query('otp'),
+        ]);
     }
 
     public function resetWithOtp(Request $request)
