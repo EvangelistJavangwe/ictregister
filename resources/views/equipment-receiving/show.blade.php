@@ -292,7 +292,7 @@
         <table>
             <thead>
                 <tr>
-                    <th>Ref No.</th><th>Date</th><th>Type</th><th>Recipient</th>
+                    <th>Ref No.</th><th>Date</th><th>Type</th><th>Recipient</th><th>Job Title</th>
                     <th>Depot / Dept</th><th>Qty</th><th>Serial Numbers</th><th>Asset Tags</th><th>Issued By</th><th>Signatures</th>
                 </tr>
             </thead>
@@ -303,6 +303,7 @@
                 <td class="text-sm">{{ $r->redistribution_date?->format('d M Y') }}</td>
                 <td><span class="badge {{ $r->redistribution_type==='Individual'?'badge-info':'badge-purple' }}">{{ $r->redistribution_type }}</span></td>
                 <td>{{ $r->recipient_name }}</td>
+                <td class="text-sm">{{ $r->recipient_job_title ?? '—' }}</td>
                 <td class="text-sm">{{ $r->depot_department ?? '—' }}</td>
                 <td style="text-align:center;font-weight:700;color:#7c3aed;">{{ $r->qty_redistributed }}</td>
                 <td>

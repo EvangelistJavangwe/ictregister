@@ -243,6 +243,12 @@
                         value="{{ old('recipient_name') }}" placeholder="Full name or depot name" required>
                     @error('recipient_name')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
+                <div class="form-group">
+                    <label class="form-label">Job Title *</label>
+                    <input type="text" name="recipient_job_title" class="form-control @error('recipient_job_title') is-invalid @enderror"
+                        value="{{ old('recipient_job_title') }}" placeholder="e.g. Accounts Clerk" required>
+                    @error('recipient_job_title')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                </div>
                 <div class="form-group" id="depot-field" style="display:none;">
                     <label class="form-label">Depot / Department</label>
                     <input type="text" name="depot_department" class="form-control" value="{{ old('depot_department') }}" placeholder="e.g. Plumtree Depot">

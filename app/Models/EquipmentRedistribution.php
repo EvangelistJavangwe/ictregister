@@ -11,7 +11,7 @@ class EquipmentRedistribution extends Model
 
     protected $fillable = [
         'redistribution_ref_no', 'equipment_receiving_register_id', 'redistribution_date',
-        'redistribution_type', 'recipient_name', 'depot_department', 'qty_redistributed',
+        'redistribution_type', 'recipient_name', 'recipient_job_title', 'depot_department', 'qty_redistributed',
         'serial_numbers', 'asset_tags',
         'cross_ref_form208', 'issued_by', 'receiver_signature', 'issuer_signature',
         'remarks', 'created_by',
