@@ -8,6 +8,7 @@ use App\Models\EquipmentReceivingRegister;
 use App\Models\TaskComment;
 use App\Models\User;
 use App\Models\WorkshopEquipmentRegister;
+use App\Models\WorkshopJobDevice;
 use App\Services\EquipmentSearchService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -121,18 +122,21 @@ class WorkshopController extends Controller
 
         // Always check for a prior workshop job on this serial — regardless of whether it's
         // also in the Helpdesk Registry — so a technician entering a new job is warned if
-        // someone already logged this exact device, and told who handled it.
-        $priorJob = WorkshopEquipmentRegister::where('serial_number_asset_tag', $serial)
-            ->with('technician')
+        // someone already logged this exact device, and told who handled it. Every device
+        // on a job (including the first) lives in workshop_job_devices, so this one lookup
+        // covers device 1 and any additional device alike, with that device's own status.
+        $priorDevice = WorkshopJobDevice::where('serial_number_asset_tag', $serial)
+            ->with('job.technician')
             ->latest()
             ->first();
+        $priorJob = $priorDevice?->job;
 
         $priorWorkshopJob = $priorJob ? [
             'job_number'      => $priorJob->entry_job_number,
             'technician'      => $priorJob->technician
                 ? trim($priorJob->technician->firstname . ' ' . $priorJob->technician->lastname)
                 : 'Unassigned',
-            'status'          => $priorJob->status,
+            'status'          => $priorDevice->status,
             'date_received'   => $priorJob->date_time_received?->format('d M Y'),
             'nature_of_fault' => $priorJob->nature_of_fault,
         ] : null;
@@ -171,8 +175,8 @@ class WorkshopController extends Controller
         return response()->json([
             'found'              => true,
             'source'             => 'workshop',
-            'equipment_type'     => $priorJob->equipment_type,
-            'brand_model'        => $priorJob->brand_make_model ?? '',
+            'equipment_type'     => $priorDevice->equipment_type,
+            'brand_model'        => $priorDevice->brand_make_model ?? '',
             'assigned_to'        => $priorJob->contact_person,
             'depot'              => $priorJob->department,
             'last_job'           => $priorJob->entry_job_number,
@@ -205,6 +209,11 @@ class WorkshopController extends Controller
             'technician_assigned'      => 'nullable|exists:users,id',
             'due_date'                 => 'nullable|date|after_or_equal:today',
             'cross_ref_form208'        => 'required|string|max:100',
+            'additional_devices'                          => 'nullable|array',
+            'additional_devices.*.equipment_type'         => 'required|string|max:150',
+            'additional_devices.*.brand_make_model'       => 'required|string|max:150',
+            'additional_devices.*.serial_number_asset_tag' => 'required|string|max:100',
+            'additional_devices.*.physical_condition_on_receipt' => 'required|string|max:200',
         ]);
 
         $user = auth()->user();
@@ -225,11 +234,37 @@ class WorkshopController extends Controller
             'created_by'          => auth()->id(),
         ]);
 
+        // Device 1 mirrors the job's own equipment columns, so every device on the
+        // job — including the first — can be found via the devices table uniformly.
+        WorkshopJobDevice::create([
+            'workshop_equipment_register_id' => $job->id,
+            'equipment_type'                 => $job->equipment_type,
+            'brand_make_model'                => $job->brand_make_model,
+            'serial_number_asset_tag'         => $job->serial_number_asset_tag,
+            'physical_condition_on_receipt'   => $job->physical_condition_on_receipt,
+        ]);
+
         if ($job->serial_number_asset_tag) {
             EquipmentHistory::record(
                 'serial_number', $job->serial_number_asset_tag,
                 'Workshop Received', "Received at workshop. Job: {$job->entry_job_number}. Fault: {$job->nature_of_fault}",
                 'workshop_equipment_registers', $job->id
+            );
+        }
+
+        foreach ($request->input('additional_devices', []) as $device) {
+            $extra = WorkshopJobDevice::create([
+                'workshop_equipment_register_id' => $job->id,
+                'equipment_type'                 => $device['equipment_type'],
+                'brand_make_model'                => $device['brand_make_model'],
+                'serial_number_asset_tag'         => $device['serial_number_asset_tag'],
+                'physical_condition_on_receipt'   => $device['physical_condition_on_receipt'],
+            ]);
+
+            EquipmentHistory::record(
+                'serial_number', $extra->serial_number_asset_tag,
+                'Workshop Received', "Received at workshop (additional device on job {$job->entry_job_number}). Fault: {$job->nature_of_fault}",
+                'workshop_job_devices', $extra->id
             );
         }
 
@@ -245,69 +280,97 @@ class WorkshopController extends Controller
 
     public function show(WorkshopEquipmentRegister $workshop)
     {
-        $workshop->load('technician', 'creator', 'comments.commenter');
+        $workshop->load('technician', 'creator', 'comments.commenter', 'devices');
         $technicians = User::where('role', 'technician')->get();
         return view('workshop.show', compact('workshop', 'technicians'));
     }
 
     public function edit(WorkshopEquipmentRegister $workshop)
     {
+        $workshop->load('devices');
         $technicians = User::where('role', 'technician')->get();
         return view('workshop.edit', compact('workshop', 'technicians'));
     }
 
     public function update(Request $request, WorkshopEquipmentRegister $workshop)
     {
+        $workshop->load('devices');
+
         $request->validate([
-            'repair_action_taken'      => 'nullable|string|required_if:status,Completed,Collected',
-            'date_repair_completed'    => [
-                'nullable', 'date', 'before_or_equal:today',
-                'after_or_equal:'.$workshop->date_time_received->format('Y-m-d'),
-            ],
-            'status'                   => 'required|in:Pending,In Progress,Completed,Collected',
-            'technician_assigned'      => 'nullable|exists:users,id',
-            'time_taken_value'         => 'nullable|integer|min:1',
-            'time_taken_unit'          => 'nullable|in:Minutes,Hours,Days,Weeks,Months',
+            'technician_assigned'        => 'nullable|exists:users,id',
+            'time_taken_value'           => 'nullable|integer|min:1',
+            'time_taken_unit'            => 'nullable|in:Minutes,Hours,Days,Weeks,Months',
             'cross_ref_form208_outgoing' => 'nullable|string|max:100',
-            'date_collected'           => [
+            'remarks_comments'           => 'nullable|string',
+            'final_depot'                => 'nullable|string|max:100',
+            'devices'                                => 'required|array|min:1',
+            'devices.*.status'                       => 'required|in:Pending,In Progress,Completed,Collected',
+            'devices.*.repair_action_taken'          => 'nullable|string|required_if:devices.*.status,Completed,Collected',
+            'devices.*.date_repair_completed'        => [
                 'nullable', 'date', 'before_or_equal:today',
                 'after_or_equal:'.$workshop->date_time_received->format('Y-m-d'),
             ],
-            'collector_name'           => 'nullable|string|max:100',
-            'collector_signature'      => 'nullable|string',
-            'remarks_comments'         => 'nullable|string',
-            'final_depot'              => 'nullable|string|max:100',
+            'devices.*.date_collected'               => [
+                'nullable', 'date', 'before_or_equal:today',
+                'after_or_equal:'.$workshop->date_time_received->format('Y-m-d'),
+            ],
+            'devices.*.collector_name'               => 'nullable|string|max:100',
+            'devices.*.collector_signature'          => 'nullable|string',
         ]);
 
-        $old = $workshop->status;
         $oldTechnicianAssigned = $workshop->technician_assigned;
 
-        // Status is set by whoever is handling the job, not derived from assignment.
-        $status = $request->status;
+        // Each device's status is set independently — e.g. a CPU can be marked
+        // Collected while a mouse and monitor on the same job remain In Progress.
+        foreach ($request->input('devices', []) as $deviceId => $data) {
+            $device = $workshop->devices->firstWhere('id', (int) $deviceId);
+            if (!$device) continue;
 
-        // Auto-promote to Collected when collection details are provided
-        if ($request->filled('date_collected') && $request->filled('collector_name')) {
-            $status = 'Collected';
+            $deviceOldStatus = $device->status;
+            $status = $data['status'] ?? $device->status;
+
+            // Auto-promote to Collected when collection details are provided for this device
+            if (!empty($data['date_collected']) && !empty($data['collector_name'])) {
+                $status = 'Collected';
+            }
+
+            $device->update([
+                'status'                 => $status,
+                'repair_action_taken'    => $data['repair_action_taken'] ?? null,
+                'date_repair_completed'  => $data['date_repair_completed'] ?? null,
+                'date_collected'         => $data['date_collected'] ?? null,
+                'collector_name'         => $data['collector_name'] ?? null,
+                'collector_signature'    => $data['collector_signature'] ?? null,
+            ]);
+
+            if ($deviceOldStatus !== $device->status && $device->serial_number_asset_tag) {
+                EquipmentHistory::record(
+                    'serial_number', $device->serial_number_asset_tag,
+                    'Status Changed', "Workshop job {$workshop->entry_job_number} — {$device->equipment_type} status changed from {$deviceOldStatus} to {$device->status}",
+                    'workshop_job_devices', $device->id
+                );
+            }
         }
+
+        $workshop->load('devices');
+        $primaryDevice = $workshop->devices->first();
 
         $workshop->update([
             ...$request->only([
-                'repair_action_taken', 'date_repair_completed',
                 'technician_assigned', 'time_taken_value', 'time_taken_unit',
-                'cross_ref_form208_outgoing', 'date_collected', 'collector_name',
-                'collector_signature', 'remarks_comments', 'final_depot',
+                'cross_ref_form208_outgoing', 'remarks_comments', 'final_depot',
             ]),
-            'status'     => $status,
-            'updated_by' => auth()->id(),
+            'status' => $workshop->computeAggregateStatus(),
+            // Mirror the primary (first) device so job-level consumers that only know
+            // about these columns — CSV export, dashboard, PDF — keep showing something
+            // meaningful; the devices table above is the source of truth going forward.
+            'repair_action_taken'   => $primaryDevice?->repair_action_taken,
+            'date_repair_completed' => $primaryDevice?->date_repair_completed,
+            'date_collected'        => $primaryDevice?->date_collected,
+            'collector_name'        => $primaryDevice?->collector_name,
+            'collector_signature'   => $primaryDevice?->collector_signature,
+            'updated_by'            => auth()->id(),
         ]);
-
-        if ($old !== $workshop->status && $workshop->serial_number_asset_tag) {
-            EquipmentHistory::record(
-                'serial_number', $workshop->serial_number_asset_tag,
-                'Status Changed', "Workshop job {$workshop->entry_job_number} status changed from {$old} to {$workshop->status}",
-                'workshop_equipment_registers', $workshop->id
-            );
-        }
 
         if ($workshop->technician_assigned && $workshop->technician_assigned != $oldTechnicianAssigned) {
             $this->notifyTechnicianAssignment($workshop, $workshop->technician);

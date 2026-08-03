@@ -6,6 +6,7 @@ use App\Models\EquipmentDisposal;
 use App\Models\EquipmentReceivingRegister;
 use App\Models\EquipmentRedistribution;
 use App\Models\WorkshopEquipmentRegister;
+use App\Models\WorkshopJobDevice;
 use Illuminate\Support\Collection;
 
 class EquipmentSearchService
@@ -70,13 +71,15 @@ class EquipmentSearchService
             ];
         }
 
-        $workshop = WorkshopEquipmentRegister::where('serial_number_asset_tag', $serial)->first();
-        if ($workshop) {
+        // Every device on a job (including the first) lives in workshop_job_devices,
+        // so this single lookup covers device 1 and any additional device alike.
+        $device = WorkshopJobDevice::with('job')->where('serial_number_asset_tag', $serial)->first();
+        if ($device && $device->job) {
             return [
                 'identifier_type' => 'serial_number',
                 'identifier_value' => $serial,
-                'label' => "{$serial} — {$workshop->equipment_type}",
-                'meta' => "Workshop job {$workshop->entry_job_number} — {$workshop->status}",
+                'label' => "{$serial} — {$device->equipment_type}",
+                'meta' => "Workshop job {$device->job->entry_job_number} — {$device->status}",
             ];
         }
 
@@ -201,26 +204,55 @@ class EquipmentSearchService
     private function searchWorkshop(string $query): array
     {
         $like = "%{$query}%";
-        $rows = WorkshopEquipmentRegister::where(function ($q) use ($like) {
-            $q->where('entry_job_number', 'like', $like)
-                ->orWhere('equipment_type', 'like', $like)
-                ->orWhere('brand_make_model', 'like', $like)
-                ->orWhere('serial_number_asset_tag', 'like', $like)
-                ->orWhere('contact_person', 'like', $like)
-                ->orWhere('department', 'like', $like);
-        })->latest()->limit(20)->get();
+        $rows = WorkshopEquipmentRegister::with(['devices' => function ($q) use ($like) {
+                $q->where('equipment_type', 'like', $like)
+                    ->orWhere('brand_make_model', 'like', $like)
+                    ->orWhere('serial_number_asset_tag', 'like', $like);
+            }])
+            ->where(function ($q) use ($like) {
+                $q->where('entry_job_number', 'like', $like)
+                    ->orWhere('equipment_type', 'like', $like)
+                    ->orWhere('brand_make_model', 'like', $like)
+                    ->orWhere('serial_number_asset_tag', 'like', $like)
+                    ->orWhere('contact_person', 'like', $like)
+                    ->orWhere('department', 'like', $like)
+                    ->orWhereHas('devices', function ($d) use ($like) {
+                        $d->where('equipment_type', 'like', $like)
+                            ->orWhere('brand_make_model', 'like', $like)
+                            ->orWhere('serial_number_asset_tag', 'like', $like);
+                    });
+            })->latest()->limit(20)->get();
 
         $out = [];
         foreach ($rows as $r) {
-            if (!$r->serial_number_asset_tag) {
-                continue;
+            // Row-level fields (job number, contact, dept) match regardless of which device is shown.
+            $rowFieldsMatch = str_contains(mb_strtolower($r->entry_job_number ?? ''), mb_strtolower($query))
+                || str_contains(mb_strtolower($r->contact_person ?? ''), mb_strtolower($query))
+                || str_contains(mb_strtolower($r->department ?? ''), mb_strtolower($query));
+
+            // Every device lives in workshop_job_devices (device 1 included); fall back
+            // to the job's own columns only if that backfill row is somehow missing.
+            $devices = $r->devices->isNotEmpty() ? $r->devices : collect([$r]);
+
+            foreach ($devices as $d) {
+                if (!$d->serial_number_asset_tag) {
+                    continue;
+                }
+                $deviceMatch = str_contains(mb_strtolower($d->equipment_type ?? ''), mb_strtolower($query))
+                    || str_contains(mb_strtolower($d->brand_make_model ?? ''), mb_strtolower($query))
+                    || str_contains(mb_strtolower($d->serial_number_asset_tag ?? ''), mb_strtolower($query));
+
+                if (!$rowFieldsMatch && !$deviceMatch) {
+                    continue;
+                }
+
+                $out[] = [
+                    'identifier_type' => 'serial_number',
+                    'identifier_value' => $d->serial_number_asset_tag,
+                    'label' => "{$d->serial_number_asset_tag} — {$d->equipment_type}" . ($d->brand_make_model ? " ({$d->brand_make_model})" : ''),
+                    'meta' => "Workshop job {$r->entry_job_number} — {$d->status}",
+                ];
             }
-            $out[] = [
-                'identifier_type' => 'serial_number',
-                'identifier_value' => $r->serial_number_asset_tag,
-                'label' => "{$r->serial_number_asset_tag} — {$r->equipment_type}" . ($r->brand_make_model ? " ({$r->brand_make_model})" : ''),
-                'meta' => "Workshop job {$r->entry_job_number} — {$r->status}",
-            ];
         }
 
         return $out;
@@ -278,22 +310,25 @@ class EquipmentSearchService
             }
         }
 
-        foreach (WorkshopEquipmentRegister::latest()->limit(300)->get() as $r) {
-            if (!$r->serial_number_asset_tag) {
-                continue;
+        foreach (WorkshopEquipmentRegister::with('devices')->latest()->limit(300)->get() as $r) {
+            $devices = $r->devices->isNotEmpty() ? $r->devices : collect([$r]);
+            foreach ($devices as $d) {
+                if (!$d->serial_number_asset_tag) {
+                    continue;
+                }
+                $text = trim(($d->equipment_type ?? '') . ' ' . ($d->brand_make_model ?? '') . ' ' . $d->serial_number_asset_tag);
+                similar_text($q, mb_strtolower($text), $pct);
+                if ($pct < 45) {
+                    continue;
+                }
+                $candidates->push([
+                    'identifier_type' => 'serial_number',
+                    'identifier_value' => $d->serial_number_asset_tag,
+                    'label' => "{$d->serial_number_asset_tag} — {$d->equipment_type}",
+                    'meta' => 'Fuzzy match — workshop',
+                    '_score' => $pct,
+                ]);
             }
-            $text = trim(($r->equipment_type ?? '') . ' ' . ($r->brand_make_model ?? '') . ' ' . $r->serial_number_asset_tag);
-            similar_text($q, mb_strtolower($text), $pct);
-            if ($pct < 45) {
-                continue;
-            }
-            $candidates->push([
-                'identifier_type' => 'serial_number',
-                'identifier_value' => $r->serial_number_asset_tag,
-                'label' => "{$r->serial_number_asset_tag} — {$r->equipment_type}",
-                'meta' => 'Fuzzy match — workshop',
-                '_score' => $pct,
-            ]);
         }
 
         return $candidates

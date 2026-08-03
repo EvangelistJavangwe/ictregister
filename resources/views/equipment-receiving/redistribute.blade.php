@@ -231,7 +231,7 @@
                 </div>
                 <div class="form-group">
                     <label class="form-label">Assignment Type *</label>
-                    <select name="redistribution_type" id="redist-type" class="form-control" required onchange="toggleDepot()">
+                    <select name="redistribution_type" id="redist-type" class="form-control" required>
                         <option value="">— Select —</option>
                         <option value="Individual"       {{ old('redistribution_type') === 'Individual' ? 'selected' : '' }}>Individual (Person)</option>
                         <option value="Depot/Department" {{ old('redistribution_type') === 'Depot/Department' ? 'selected' : '' }}>Depot / Department</option>
@@ -249,9 +249,9 @@
                         value="{{ old('recipient_job_title') }}" placeholder="e.g. Accounts Clerk" required>
                     @error('recipient_job_title')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
-                <div class="form-group" id="depot-field" style="display:none;">
-                    <label class="form-label">Depot / Department</label>
-                    <input type="text" name="depot_department" class="form-control" value="{{ old('depot_department') }}" placeholder="e.g. Plumtree Depot">
+                <div class="form-group">
+                    <label class="form-label">Depot</label>
+                    <input type="text" name="depot_department" class="form-control" value="{{ old('depot_department') }}" placeholder="e.g. Plumtree Depot — depot the recipient belongs to">
                 </div>
                 <div class="form-group">
                     <label class="form-label">Issued By *</label>
@@ -331,11 +331,6 @@ function updateCount() {
     document.getElementById('selected-count').textContent = checked ? checked + ' of ' + total + ' selected' : '';
 }
 
-function toggleDepot() {
-    const type = document.getElementById('redist-type').value;
-    document.getElementById('depot-field').style.display = type === 'Depot/Department' ? '' : 'none';
-}
-
 function initSigPad(canvasId, hiddenId) {
     const canvas = document.getElementById(canvasId);
     const ctx = canvas.getContext('2d');
@@ -374,7 +369,6 @@ function clearCanvas(id, hid) {
 
 initSigPad('sig-receiver', 'sig-receiver-data');
 initSigPad('sig-issuer',   'sig-issuer-data');
-toggleDepot();
 updateCount();
 </script>
 @endpush

@@ -7,7 +7,7 @@ use App\Models\EquipmentDisposal;
 use App\Models\EquipmentHistory;
 use App\Models\EquipmentReceivingRegister;
 use App\Models\EquipmentRedistribution;
-use App\Models\WorkshopEquipmentRegister;
+use App\Models\WorkshopJobDevice;
 use Illuminate\Http\Request;
 
 class EquipmentRedistributionController extends Controller
@@ -42,10 +42,18 @@ class EquipmentRedistributionController extends Controller
 
         $allSerials = array_merge($availableSerials, array_keys($deployedWithHolder));
 
-        $workshopLockedSerials = WorkshopEquipmentRegister::whereIn('serial_number_asset_tag', $allSerials)
-            ->whereNotIn('status', ['Collected'])
-            ->get(['serial_number_asset_tag', 'entry_job_number', 'status'])
-            ->keyBy('serial_number_asset_tag')
+        // Each device on a workshop job carries its own status, so e.g. a CPU already
+        // marked Collected unlocks for redistribution even if a mouse/monitor on the
+        // same job are still In Progress.
+        $workshopLockedSerials = WorkshopJobDevice::whereIn('serial_number_asset_tag', $allSerials)
+            ->where('status', '!=', 'Collected')
+            ->with('job:id,entry_job_number')
+            ->get()
+            ->mapWithKeys(fn($d) => [$d->serial_number_asset_tag => [
+                'serial_number_asset_tag' => $d->serial_number_asset_tag,
+                'entry_job_number'        => $d->job->entry_job_number,
+                'status'                  => $d->status,
+            ]])
             ->toArray();
 
         $disposalLockedSerials = EquipmentDisposal::whereIn('asset_tag_serial_no', $allSerials)
@@ -99,10 +107,17 @@ class EquipmentRedistributionController extends Controller
                 ->withErrors(['selected_serials' => 'Invalid serial number(s): '.implode(', ', $invalid)]);
         }
 
-        // Block redistribution for serials currently in an active workshop job
-        $workshopLocked = WorkshopEquipmentRegister::whereIn('serial_number_asset_tag', $selectedSerials)
-            ->whereNotIn('status', ['Collected'])
-            ->get(['serial_number_asset_tag', 'entry_job_number', 'status']);
+        // Block redistribution for serials currently in an active workshop job — checked
+        // per device, so a Collected device unlocks independently of its job siblings.
+        $workshopLocked = WorkshopJobDevice::whereIn('serial_number_asset_tag', $selectedSerials)
+            ->where('status', '!=', 'Collected')
+            ->with('job:id,entry_job_number')
+            ->get(['id', 'serial_number_asset_tag', 'status', 'workshop_equipment_register_id'])
+            ->map(fn($d) => (object) [
+                'serial_number_asset_tag' => $d->serial_number_asset_tag,
+                'entry_job_number'        => $d->job->entry_job_number,
+                'status'                  => $d->status,
+            ]);
 
         if ($workshopLocked->isNotEmpty()) {
             $detail = $workshopLocked->map(fn($w) => "{$w->serial_number_asset_tag} (Job: {$w->entry_job_number}, Status: {$w->status})")->implode('; ');

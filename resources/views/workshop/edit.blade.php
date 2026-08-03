@@ -12,17 +12,64 @@
         <form method="POST" action="{{ route('workshop.update', $workshop) }}">
             @csrf @method('PUT')
             <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 14px;font-size:.82rem;color:#1e40af;margin-bottom:14px;">
-                <i class="fas fa-info-circle"></i> Every job starts <strong>Pending</strong>. The technician handling it must update the Status below to <strong>In Progress</strong> once work begins.
+                <i class="fas fa-info-circle"></i> Every device starts <strong>Pending</strong>. Each device below is tracked independently — e.g. one device can be marked <strong>Collected</strong> while others on this same job are still <strong>In Progress</strong>.
             </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label class="form-label">Status</label>
-                    <select name="status" id="status-select" class="form-control" required onchange="toggleRepairActionRequired()">
-                        @foreach(['Pending','In Progress','Completed','Collected'] as $s)
-                        <option value="{{ $s }}" {{ $workshop->status === $s ? 'selected' : '' }}>{{ $s }}</option>
-                        @endforeach
-                    </select>
+
+            <h4 style="font-size:.9rem;font-weight:700;color:#64748b;text-transform:uppercase;margin-bottom:14px;"><i class="fas fa-laptop"></i> Devices</h4>
+
+            @foreach($workshop->devices as $i => $device)
+            <div class="device-update-row" style="border:1px solid #e2e8f0;border-radius:10px;padding:16px;margin-bottom:14px;">
+                <div style="font-size:.78rem;font-weight:700;color:#2563eb;text-transform:uppercase;margin-bottom:10px;">
+                    Device {{ $i + 1 }}{{ $i === 0 ? ' (Primary)' : '' }} — {{ $device->equipment_type }}
+                    @if($device->serial_number_asset_tag)<span style="color:#94a3b8;font-weight:400;text-transform:none;">&mdash; {{ $device->serial_number_asset_tag }}</span>@endif
                 </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Status</label>
+                        <select name="devices[{{ $device->id }}][status]" class="form-control device-status-select" data-device-id="{{ $device->id }}" required>
+                            @foreach(['Pending','In Progress','Completed','Collected'] as $s)
+                            <option value="{{ $s }}" {{ old('devices.'.$device->id.'.status', $device->status) === $s ? 'selected' : '' }}>{{ $s }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Date Repair Completed</label>
+                        <input type="date" name="devices[{{ $device->id }}][date_repair_completed]" class="form-control" value="{{ old('devices.'.$device->id.'.date_repair_completed', $device->date_repair_completed?->format('Y-m-d')) }}">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label device-repair-label">Repair Action Taken</label>
+                    <textarea name="devices[{{ $device->id }}][repair_action_taken]" class="form-control device-repair-action @error('devices.'.$device->id.'.repair_action_taken') is-invalid @enderror" rows="3">{{ old('devices.'.$device->id.'.repair_action_taken', $device->repair_action_taken) }}</textarea>
+                    @error('devices.'.$device->id.'.repair_action_taken')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Date Collected</label>
+                        <input type="date" name="devices[{{ $device->id }}][date_collected]" class="form-control device-date-collected" value="{{ old('devices.'.$device->id.'.date_collected', $device->date_collected?->format('Y-m-d')) }}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Collected By (Name)</label>
+                        <input type="text" name="devices[{{ $device->id }}][collector_name]" class="form-control device-collector-name" value="{{ old('devices.'.$device->id.'.collector_name', $device->collector_name) }}" placeholder="Full name of person collecting">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Collector Signature (Digital)</label>
+                    <div class="sig-pad-wrap">
+                        <canvas class="device-sig-pad" width="600" height="150"></canvas>
+                    </div>
+                    <input type="hidden" name="devices[{{ $device->id }}][collector_signature]" class="device-sig-data" value="{{ $device->collector_signature }}">
+                    <button type="button" class="btn btn-sm btn-secondary mt-1 device-sig-clear"><i class="fas fa-eraser"></i> Clear</button>
+                </div>
+            </div>
+            @endforeach
+
+            <hr class="divider">
+            <h4 style="font-size:.9rem;font-weight:700;color:#64748b;text-transform:uppercase;margin-bottom:14px;">Job-Level Details</h4>
+            <div class="form-row">
                 @if(auth()->user()->isAdminOrHod())
                 <div class="form-group">
                     <label class="form-label">Assign Technician</label>
@@ -36,19 +83,6 @@
                     </select>
                 </div>
                 @endif
-                <div class="form-group">
-                    <label class="form-label">Date Repair Completed</label>
-                    <input type="date" name="date_repair_completed" class="form-control" value="{{ $workshop->date_repair_completed?->format('Y-m-d') }}">
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label class="form-label" id="repair-action-label">Repair Action Taken</label>
-                <textarea name="repair_action_taken" id="repair_action_taken" class="form-control @error('repair_action_taken') is-invalid @enderror" rows="4">{{ old('repair_action_taken', $workshop->repair_action_taken) }}</textarea>
-                @error('repair_action_taken')<div class="invalid-feedback">{{ $message }}</div>@enderror
-            </div>
-
-            <div class="form-row">
                 <div class="form-group">
                     <label class="form-label">Time Taken — Value</label>
                     <select name="time_taken_value" class="form-control">
@@ -71,36 +105,11 @@
                     <label class="form-label">Outgoing Cross Ref / Form 208</label>
                     <input type="text" name="cross_ref_form208_outgoing" class="form-control" value="{{ old('cross_ref_form208_outgoing', $workshop->cross_ref_form208_outgoing) }}">
                 </div>
-            </div>
-
-            <hr class="divider">
-            <h4 style="font-size:.9rem;font-weight:700;color:#64748b;text-transform:uppercase;margin-bottom:14px;">Collection Details</h4>
-            <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 14px;font-size:.82rem;color:#1e40af;margin-bottom:14px;">
-                <i class="fas fa-info-circle"></i> Filling in both <strong>Date Collected</strong> and <strong>Collected By</strong> will automatically move the status to <strong>Collected</strong>.
-            </div>
-            <div class="form-row">
                 <div class="form-group">
                     <label class="form-label">Final Depot <span style="color:#94a3b8;font-weight:400;">(if heading elsewhere after repair)</span></label>
                     <input type="text" name="final_depot" class="form-control @error('final_depot') is-invalid @enderror" value="{{ old('final_depot', $workshop->final_depot) }}" placeholder="Leave blank to return to {{ $workshop->depot_name }}">
                     @error('final_depot')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Date Collected</label>
-                    <input type="date" name="date_collected" id="date_collected" class="form-control" value="{{ $workshop->date_collected?->format('Y-m-d') }}">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Collected By (Name)</label>
-                    <input type="text" name="collector_name" id="collector_name" class="form-control" value="{{ old('collector_name', $workshop->collector_name) }}" placeholder="Full name of person collecting">
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label class="form-label">Collector Signature (Digital)</label>
-                <div class="sig-pad-wrap">
-                    <canvas id="signature-pad" width="600" height="150"></canvas>
-                </div>
-                <input type="hidden" name="collector_signature" id="sig-data" value="{{ $workshop->collector_signature }}">
-                <button type="button" onclick="clearSig()" class="btn btn-sm btn-secondary mt-1"><i class="fas fa-eraser"></i> Clear</button>
             </div>
 
             <div class="form-group">
@@ -116,71 +125,85 @@
 
 @push('scripts')
 <script>
-// Repair Action Taken becomes required once the job is Completed or Collected
-function toggleRepairActionRequired() {
-    const status   = document.getElementById('status-select').value;
-    const textarea = document.getElementById('repair_action_taken');
-    const label    = document.getElementById('repair-action-label');
-    const isRequired = status === 'Completed' || status === 'Collected';
+document.querySelectorAll('.device-update-row').forEach(function (row) {
+    const statusSelect  = row.querySelector('.device-status-select');
+    const repairAction  = row.querySelector('.device-repair-action');
+    const repairLabel   = row.querySelector('.device-repair-label');
+    const dateCollected = row.querySelector('.device-date-collected');
+    const collectorName = row.querySelector('.device-collector-name');
+    const canvas         = row.querySelector('.device-sig-pad');
+    const sigDataInput   = row.querySelector('.device-sig-data');
+    const clearBtn        = row.querySelector('.device-sig-clear');
 
-    textarea.required = isRequired;
-    label.textContent = isRequired ? 'Repair Action Taken *' : 'Repair Action Taken';
-}
-
-// Auto-promote status to Collected when both collection fields are filled
-function checkCollectionStatus() {
-    const dateVal = document.getElementById('date_collected').value.trim();
-    const nameVal = document.getElementById('collector_name').value.trim();
-    const statusSelect = document.getElementById('status-select');
-    if (dateVal && nameVal) {
-        statusSelect.value = 'Collected';
-        statusSelect.style.borderColor = '#7c3aed';
-        statusSelect.style.background  = '#ede9fe';
-    } else if (statusSelect.value === 'Collected' && (!dateVal || !nameVal)) {
-        // only revert if user cleared the fields
-        statusSelect.style.borderColor = '';
-        statusSelect.style.background  = '';
+    // Repair Action Taken becomes required once this device is Completed or Collected
+    function toggleRepairActionRequired() {
+        const isRequired = statusSelect.value === 'Completed' || statusSelect.value === 'Collected';
+        repairAction.required = isRequired;
+        repairLabel.textContent = isRequired ? 'Repair Action Taken *' : 'Repair Action Taken';
     }
-    toggleRepairActionRequired();
-}
-document.getElementById('date_collected').addEventListener('change', checkCollectionStatus);
-document.getElementById('collector_name').addEventListener('input',  checkCollectionStatus);
-// Run once on page load in case record already has collection details
-checkCollectionStatus();
 
-const canvas = document.getElementById('signature-pad');
-const ctx = canvas.getContext('2d');
-let drawing = false, lastX = 0, lastY = 0;
+    // Auto-promote this device's status to Collected when both collection fields are filled
+    function checkCollectionStatus() {
+        const dateVal = dateCollected.value.trim();
+        const nameVal = collectorName.value.trim();
+        if (dateVal && nameVal) {
+            statusSelect.value = 'Collected';
+            statusSelect.style.borderColor = '#7c3aed';
+            statusSelect.style.background  = '#ede9fe';
+        } else if (statusSelect.value === 'Collected' && (!dateVal || !nameVal)) {
+            statusSelect.style.borderColor = '';
+            statusSelect.style.background  = '';
+        }
+        toggleRepairActionRequired();
+    }
 
-function getPos(e) {
-    const rect = canvas.getBoundingClientRect();
-    const touch = e.touches ? e.touches[0] : e;
-    return [touch.clientX - rect.left, touch.clientY - rect.top];
-}
-canvas.addEventListener('mousedown', e => { drawing = true; [lastX, lastY] = getPos(e); });
-canvas.addEventListener('mousemove', e => {
-    if (!drawing) return;
-    const [x, y] = getPos(e);
-    ctx.beginPath(); ctx.moveTo(lastX, lastY); ctx.lineTo(x, y);
-    ctx.strokeStyle = '#1e293b'; ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.stroke();
-    [lastX, lastY] = [x, y];
-    document.getElementById('sig-data').value = canvas.toDataURL();
+    statusSelect.addEventListener('change', toggleRepairActionRequired);
+    dateCollected.addEventListener('change', checkCollectionStatus);
+    collectorName.addEventListener('input',  checkCollectionStatus);
+    checkCollectionStatus();
+
+    // Signature pad
+    const ctx = canvas.getContext('2d');
+    let drawing = false, lastX = 0, lastY = 0;
+
+    function getPos(e) {
+        const rect = canvas.getBoundingClientRect();
+        const touch = e.touches ? e.touches[0] : e;
+        return [touch.clientX - rect.left, touch.clientY - rect.top];
+    }
+    canvas.addEventListener('mousedown', e => { drawing = true; [lastX, lastY] = getPos(e); });
+    canvas.addEventListener('mousemove', e => {
+        if (!drawing) return;
+        const [x, y] = getPos(e);
+        ctx.beginPath(); ctx.moveTo(lastX, lastY); ctx.lineTo(x, y);
+        ctx.strokeStyle = '#1e293b'; ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.stroke();
+        [lastX, lastY] = [x, y];
+        sigDataInput.value = canvas.toDataURL();
+    });
+    canvas.addEventListener('mouseup', () => drawing = false);
+    canvas.addEventListener('mouseleave', () => drawing = false);
+    canvas.addEventListener('touchstart', e => { e.preventDefault(); drawing = true; [lastX, lastY] = getPos(e); });
+    canvas.addEventListener('touchmove', e => {
+        e.preventDefault(); if (!drawing) return;
+        const [x, y] = getPos(e);
+        ctx.beginPath(); ctx.moveTo(lastX, lastY); ctx.lineTo(x, y);
+        ctx.strokeStyle = '#1e293b'; ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.stroke();
+        [lastX, lastY] = [x, y];
+        sigDataInput.value = canvas.toDataURL();
+    });
+    canvas.addEventListener('touchend', () => drawing = false);
+
+    clearBtn.addEventListener('click', function () {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        sigDataInput.value = '';
+    });
+
+    if (sigDataInput.value && sigDataInput.value.startsWith('data:')) {
+        const img = new Image();
+        img.onload = () => ctx.drawImage(img, 0, 0);
+        img.src = sigDataInput.value;
+    }
 });
-canvas.addEventListener('mouseup', () => drawing = false);
-canvas.addEventListener('mouseleave', () => drawing = false);
-
-function clearSig() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    document.getElementById('sig-data').value = '';
-}
-
-// Load existing signature
-const existing = '{{ $workshop->collector_signature }}';
-if (existing && existing.startsWith('data:')) {
-    const img = new Image();
-    img.onload = () => ctx.drawImage(img, 0, 0);
-    img.src = existing;
-}
 </script>
 @endpush
 @endsection

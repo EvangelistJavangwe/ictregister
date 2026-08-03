@@ -67,4 +67,29 @@ class WorkshopEquipmentRegister extends Model
     {
         return $this->hasMany(TaskComment::class, 'workshop_equipment_id')->latest();
     }
+
+    /** Every device on this job, oldest first — the first row mirrors the job's own equipment columns. */
+    public function devices()
+    {
+        return $this->hasMany(WorkshopJobDevice::class, 'workshop_equipment_register_id')->oldest('id');
+    }
+
+    /**
+     * The job's own status is an aggregate of its devices' individual statuses, so
+     * e.g. a job with one Collected device and two still In Progress reads as
+     * "In Progress" overall, while list/dashboard/export views (which only know
+     * about the job-level column) keep showing something meaningful.
+     */
+    public function computeAggregateStatus(): string
+    {
+        $statuses = $this->devices->pluck('status');
+        if ($statuses->isEmpty()) {
+            return $this->status;
+        }
+
+        if ($statuses->every(fn($s) => $s === 'Collected')) return 'Collected';
+        if ($statuses->every(fn($s) => in_array($s, ['Completed', 'Collected']))) return 'Completed';
+        if ($statuses->contains(fn($s) => in_array($s, ['In Progress', 'Completed', 'Collected']))) return 'In Progress';
+        return 'Pending';
+    }
 }

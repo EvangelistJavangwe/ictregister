@@ -57,6 +57,46 @@
 </div>
 
 <div class="card mt-2">
+    <div class="card-header"><h3><i class="fas fa-laptop"></i> Devices on this Job ({{ $workshop->devices->count() }})</h3></div>
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr><th>#</th><th>Equipment Type</th><th>Brand/Make/Model</th><th>Serial / Asset Tag</th><th>Physical Condition</th><th>Status</th><th>Collected</th></tr>
+            </thead>
+            <tbody>
+            @foreach($workshop->devices as $i => $device)
+                <tr>
+                    <td>{{ $i + 1 }}{{ $i === 0 ? ' (Primary)' : '' }}</td>
+                    <td>{{ $device->equipment_type }}</td>
+                    <td>{{ $device->brand_make_model ?? '—' }}</td>
+                    <td>{{ $device->serial_number_asset_tag ?? '—' }}</td>
+                    <td>{{ $device->physical_condition_on_receipt ?? '—' }}</td>
+                    <td>
+                        @if($device->status === 'Collected')
+                            <span class="badge" style="background:#ede9fe;color:#6d28d9;border:1px solid #ddd6fe;font-weight:700;">Collected</span>
+                        @elseif($device->status === 'Completed')
+                            <span class="badge" style="background:#d1fae5;color:#065f46;border:1px solid #a7f3d0;font-weight:700;">Completed</span>
+                        @elseif($device->status === 'In Progress')
+                            <span class="badge badge-info">In Progress</span>
+                        @else
+                            <span class="badge badge-warning">Pending</span>
+                        @endif
+                    </td>
+                    <td class="text-sm">
+                        @if($device->status === 'Collected')
+                            {{ $device->collector_name ?? '—' }}{{ $device->date_collected ? ' ('.$device->date_collected->format('d M Y').')' : '' }}
+                        @else
+                            —
+                        @endif
+                    </td>
+                </tr>
+            @endforeach
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="card mt-2">
     <div class="card-header"><h3>Nature of Fault</h3></div>
     <div class="card-body"><p>{{ $workshop->nature_of_fault }}</p></div>
 </div>
