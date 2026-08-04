@@ -46,8 +46,14 @@
                 <div class="form-group">
                     <label class="form-label">Department / User *</label>
                     <input type="text" name="department_user" id="department_user"
-                           class="form-control @error('department_user') is-invalid @enderror" value="{{ old('department_user') }}" required>
+                           class="form-control @error('department_user') is-invalid @enderror" value="{{ old('department_user') }}"
+                           list="depot-suggestions" autocomplete="off" required>
                     @error('department_user')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    <datalist id="depot-suggestions">
+                        @foreach($depots as $depot)
+                        <option value="{{ $depot }}">
+                        @endforeach
+                    </datalist>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Date Acquired</label>

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\AuditTrail;
+use App\Models\Depot;
 use App\Models\EquipmentDisposal;
 use App\Models\EquipmentHistory;
 use App\Models\EquipmentReceivingRegister;
@@ -62,9 +63,11 @@ class EquipmentRedistributionController extends Controller
             ->keyBy('asset_tag_serial_no')
             ->toArray();
 
+        $depots = Depot::names();
+
         return view('equipment-receiving.redistribute', compact(
             'equipmentReceiving', 'availableSerials', 'deployedWithHolder', 'filterSerial',
-            'workshopLockedSerials', 'disposalLockedSerials'
+            'workshopLockedSerials', 'disposalLockedSerials', 'depots'
         ));
     }
 
@@ -167,6 +170,8 @@ class EquipmentRedistributionController extends Controller
             'remarks'                         => $request->remarks,
             'created_by'                      => auth()->id(),
         ]);
+
+        Depot::rememberIfNew($request->depot_department);
 
         // Record history for every serial — note transfers show previous holder
         foreach ($selectedSerials as $sn) {

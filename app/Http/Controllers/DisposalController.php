@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\AuditTrail;
+use App\Models\Depot;
 use App\Models\EquipmentDisposal;
 use App\Models\EquipmentHistory;
 use App\Models\EquipmentReceivingRegister;
@@ -98,7 +99,8 @@ class DisposalController extends Controller
     public function create()
     {
         $user = auth()->user();
-        return view('disposal.create', compact('user'));
+        $depots = Depot::names();
+        return view('disposal.create', compact('user', 'depots'));
     }
 
     public function store(Request $request)
@@ -143,6 +145,8 @@ class DisposalController extends Controller
             );
         }
 
+        Depot::rememberIfNew($record->department_user);
+
         AuditTrail::log('create', 'Disposal', "Disposal request created for: {$record->asset_description}", 'info', $record->id);
 
         return redirect()->route('disposal.show', $record)->with('success', 'Disposal request submitted successfully.');
@@ -157,7 +161,8 @@ class DisposalController extends Controller
     public function edit(EquipmentDisposal $disposal)
     {
         if (auth()->user()->isTechnician()) abort(403);
-        return view('disposal.edit', compact('disposal'));
+        $depots = Depot::names();
+        return view('disposal.edit', compact('disposal', 'depots'));
     }
 
     public function update(Request $request, EquipmentDisposal $disposal)
@@ -191,6 +196,8 @@ class DisposalController extends Controller
             ]),
             'data_wiped_destroyed' => $request->boolean('data_wiped_destroyed'),
         ]);
+
+        Depot::rememberIfNew($disposal->department_user);
 
         AuditTrail::log('update', 'Disposal', "Updated disposal record: {$disposal->asset_description}", 'success', $disposal->id);
 

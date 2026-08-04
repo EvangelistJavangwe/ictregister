@@ -107,9 +107,14 @@
                 </div>
                 <div class="form-group">
                     <label class="form-label">Final Depot <span style="color:#94a3b8;font-weight:400;">(if heading elsewhere after repair)</span></label>
-                    <input type="text" name="final_depot" class="form-control @error('final_depot') is-invalid @enderror" value="{{ old('final_depot', $workshop->final_depot) }}" placeholder="Leave blank to return to {{ $workshop->depot_name }}">
+                    <input type="text" name="final_depot" class="form-control @error('final_depot') is-invalid @enderror" value="{{ old('final_depot', $workshop->final_depot) }}" placeholder="Leave blank to return to {{ $workshop->depot_name }}" list="depot-suggestions" autocomplete="off">
                     @error('final_depot')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
+                <datalist id="depot-suggestions">
+                    @foreach($depots as $depot)
+                    <option value="{{ $depot }}">
+                    @endforeach
+                </datalist>
             </div>
 
             <div class="form-group">

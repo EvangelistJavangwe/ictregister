@@ -251,7 +251,13 @@
                 </div>
                 <div class="form-group">
                     <label class="form-label">Depot</label>
-                    <input type="text" name="depot_department" class="form-control" value="{{ old('depot_department') }}" placeholder="e.g. Plumtree Depot — depot the recipient belongs to">
+                    <input type="text" name="depot_department" class="form-control" value="{{ old('depot_department') }}"
+                        placeholder="Start typing a depot name…" list="depot-suggestions" autocomplete="off">
+                    <datalist id="depot-suggestions">
+                        @foreach($depots as $depot)
+                        <option value="{{ $depot }}">
+                        @endforeach
+                    </datalist>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Issued By *</label>

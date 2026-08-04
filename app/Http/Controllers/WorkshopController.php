@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\AuditTrail;
+use App\Models\Depot;
 use App\Models\EquipmentHistory;
 use App\Models\EquipmentReceivingRegister;
 use App\Models\TaskComment;
@@ -187,7 +188,8 @@ class WorkshopController extends Controller
     public function create()
     {
         $technicians = User::where('role', 'technician')->get();
-        return view('workshop.create', compact('technicians'));
+        $depots = Depot::names();
+        return view('workshop.create', compact('technicians', 'depots'));
     }
 
     public function store(Request $request)
@@ -233,6 +235,9 @@ class WorkshopController extends Controller
             'status'              => 'Pending',
             'created_by'          => auth()->id(),
         ]);
+
+        Depot::rememberIfNew($job->depot_name);
+        Depot::rememberIfNew($job->final_depot);
 
         // Device 1 mirrors the job's own equipment columns, so every device on the
         // job — including the first — can be found via the devices table uniformly.
@@ -289,7 +294,8 @@ class WorkshopController extends Controller
     {
         $workshop->load('devices');
         $technicians = User::where('role', 'technician')->get();
-        return view('workshop.edit', compact('workshop', 'technicians'));
+        $depots = Depot::names();
+        return view('workshop.edit', compact('workshop', 'technicians', 'depots'));
     }
 
     public function update(Request $request, WorkshopEquipmentRegister $workshop)
@@ -371,6 +377,8 @@ class WorkshopController extends Controller
             'collector_signature'   => $primaryDevice?->collector_signature,
             'updated_by'            => auth()->id(),
         ]);
+
+        Depot::rememberIfNew($workshop->final_depot);
 
         if ($workshop->technician_assigned && $workshop->technician_assigned != $oldTechnicianAssigned) {
             $this->notifyTechnicianAssignment($workshop, $workshop->technician);

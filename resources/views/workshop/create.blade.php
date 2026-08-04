@@ -115,14 +115,19 @@
             <div class="form-row">
                 <div class="form-group">
                     <label class="form-label">Depot Name *</label>
-                    <input type="text" name="depot_name" class="form-control @error('depot_name') is-invalid @enderror" value="{{ old('depot_name') }}" required>
+                    <input type="text" name="depot_name" class="form-control @error('depot_name') is-invalid @enderror" value="{{ old('depot_name') }}" list="depot-suggestions" autocomplete="off" required>
                     @error('depot_name')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
                 <div class="form-group">
                     <label class="form-label">Final Depot <span style="color:#94a3b8;font-weight:400;">(if heading elsewhere after repair)</span></label>
-                    <input type="text" name="final_depot" class="form-control @error('final_depot') is-invalid @enderror" value="{{ old('final_depot') }}" placeholder="Leave blank to return to Depot Name above">
+                    <input type="text" name="final_depot" class="form-control @error('final_depot') is-invalid @enderror" value="{{ old('final_depot') }}" placeholder="Leave blank to return to Depot Name above" list="depot-suggestions" autocomplete="off">
                     @error('final_depot')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
+                <datalist id="depot-suggestions">
+                    @foreach($depots as $depot)
+                    <option value="{{ $depot }}">
+                    @endforeach
+                </datalist>
                 <div class="form-group">
                     <label class="form-label">Department *</label>
                     <input type="text" name="department" class="form-control @error('department') is-invalid @enderror" value="{{ old('department') }}" required>
