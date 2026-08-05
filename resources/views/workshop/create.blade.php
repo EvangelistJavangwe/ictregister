@@ -109,30 +109,33 @@
                     </div>
 
                     <label style="display:flex;align-items:center;gap:6px;font-size:.85rem;color:#475569;margin:10px 0;cursor:pointer;">
-                        <input type="checkbox" class="device-same-sender" checked style="width:16px;height:16px;">
+                        <input type="checkbox" class="device-same-sender" style="width:16px;height:16px;">
                         Same Sender Information as Device 1 (same depot)
                     </label>
 
-                    <div class="device-sender-fields form-row" style="display:none;">
-                        <div class="form-group">
-                            <label class="form-label">Depot Name</label>
-                            <input type="text" class="form-control device-depot-name" list="depot-suggestions" autocomplete="off">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Final Depot <span style="color:#94a3b8;font-weight:400;">(if heading elsewhere after repair)</span></label>
-                            <input type="text" class="form-control device-final-depot" placeholder="Leave blank to return to Depot Name above" list="depot-suggestions" autocomplete="off">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Department</label>
-                            <input type="text" class="form-control device-department">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Extension Number</label>
-                            <input type="text" class="form-control device-contact-person" placeholder="e.g. 1205" maxlength="4" pattern="\d{4}" inputmode="numeric" title="Enter a 4-digit extension number">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Phone Number</label>
-                            <input type="text" class="form-control device-phone-number">
+                    <div class="device-sender-fields" style="border:1px solid #dbeafe;background:#f8fafc;border-radius:8px;padding:14px;">
+                        <div style="font-size:.78rem;font-weight:700;color:#2563eb;text-transform:uppercase;margin-bottom:10px;"><i class="fas fa-building"></i> Sender Information for this Device</div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Depot Name</label>
+                                <input type="text" class="form-control device-depot-name" list="depot-suggestions" autocomplete="off">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Final Depot <span style="color:#94a3b8;font-weight:400;">(if heading elsewhere after repair)</span></label>
+                                <input type="text" class="form-control device-final-depot" placeholder="Leave blank to return to Depot Name above" list="depot-suggestions" autocomplete="off">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Department</label>
+                                <input type="text" class="form-control device-department">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Extension Number</label>
+                                <input type="text" class="form-control device-contact-person" placeholder="e.g. 1205" maxlength="4" pattern="\d{4}" inputmode="numeric" title="Enter a 4-digit extension number">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Phone Number</label>
+                                <input type="text" class="form-control device-phone-number">
+                            </div>
                         </div>
                     </div>
                 </div>
