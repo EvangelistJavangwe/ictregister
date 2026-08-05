@@ -45,24 +45,26 @@
                     @error('devices.'.$device->id.'.repair_action_taken')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
 
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Date Collected</label>
-                        <input type="date" name="devices[{{ $device->id }}][date_collected]" class="form-control device-date-collected" value="{{ old('devices.'.$device->id.'.date_collected', $device->date_collected?->format('Y-m-d')) }}">
+                <div class="device-collection-fields" style="{{ $device->status === 'Collected' ? '' : 'display:none;' }}">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Date Collected</label>
+                            <input type="date" name="devices[{{ $device->id }}][date_collected]" class="form-control device-date-collected" value="{{ old('devices.'.$device->id.'.date_collected', $device->date_collected?->format('Y-m-d')) }}">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Collected By (Name)</label>
+                            <input type="text" name="devices[{{ $device->id }}][collector_name]" class="form-control device-collector-name" value="{{ old('devices.'.$device->id.'.collector_name', $device->collector_name) }}" placeholder="Full name of person collecting">
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label class="form-label">Collected By (Name)</label>
-                        <input type="text" name="devices[{{ $device->id }}][collector_name]" class="form-control device-collector-name" value="{{ old('devices.'.$device->id.'.collector_name', $device->collector_name) }}" placeholder="Full name of person collecting">
-                    </div>
-                </div>
 
-                <div class="form-group">
-                    <label class="form-label">Collector Signature (Digital)</label>
-                    <div class="sig-pad-wrap">
-                        <canvas class="device-sig-pad" width="600" height="150"></canvas>
+                    <div class="form-group">
+                        <label class="form-label">Collector Signature (Digital)</label>
+                        <div class="sig-pad-wrap">
+                            <canvas class="device-sig-pad" width="600" height="150"></canvas>
+                        </div>
+                        <input type="hidden" name="devices[{{ $device->id }}][collector_signature]" class="device-sig-data" value="{{ $device->collector_signature }}">
+                        <button type="button" class="btn btn-sm btn-secondary mt-1 device-sig-clear"><i class="fas fa-eraser"></i> Clear</button>
                     </div>
-                    <input type="hidden" name="devices[{{ $device->id }}][collector_signature]" class="device-sig-data" value="{{ $device->collector_signature }}">
-                    <button type="button" class="btn btn-sm btn-secondary mt-1 device-sig-clear"><i class="fas fa-eraser"></i> Clear</button>
                 </div>
             </div>
             @endforeach
@@ -139,12 +141,18 @@ document.querySelectorAll('.device-update-row').forEach(function (row) {
     const canvas         = row.querySelector('.device-sig-pad');
     const sigDataInput   = row.querySelector('.device-sig-data');
     const clearBtn        = row.querySelector('.device-sig-clear');
+    const collectionFields = row.querySelector('.device-collection-fields');
 
     // Repair Action Taken becomes required once this device is Completed or Collected
     function toggleRepairActionRequired() {
         const isRequired = statusSelect.value === 'Completed' || statusSelect.value === 'Collected';
         repairAction.required = isRequired;
         repairLabel.textContent = isRequired ? 'Repair Action Taken *' : 'Repair Action Taken';
+    }
+
+    // Date Collected / Collected By / Signature only make sense once this device is Collected
+    function toggleCollectionFields() {
+        collectionFields.style.display = statusSelect.value === 'Collected' ? '' : 'none';
     }
 
     // Auto-promote this device's status to Collected when both collection fields are filled
@@ -163,9 +171,11 @@ document.querySelectorAll('.device-update-row').forEach(function (row) {
     }
 
     statusSelect.addEventListener('change', toggleRepairActionRequired);
+    statusSelect.addEventListener('change', toggleCollectionFields);
     dateCollected.addEventListener('change', checkCollectionStatus);
     collectorName.addEventListener('input',  checkCollectionStatus);
     checkCollectionStatus();
+    toggleCollectionFields();
 
     // Signature pad
     const ctx = canvas.getContext('2d');
