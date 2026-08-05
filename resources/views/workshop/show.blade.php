@@ -61,7 +61,7 @@
     <div class="table-wrap">
         <table>
             <thead>
-                <tr><th>#</th><th>Equipment Type</th><th>Brand/Make/Model</th><th>Serial / Asset Tag</th><th>Physical Condition</th><th>Status</th><th>Collected</th></tr>
+                <tr><th>#</th><th>Equipment Type</th><th>Brand/Make/Model</th><th>Serial / Asset Tag</th><th>Physical Condition</th><th>Sender</th><th>Status</th><th>Collected</th></tr>
             </thead>
             <tbody>
             @foreach($workshop->devices as $i => $device)
@@ -71,6 +71,14 @@
                     <td>{{ $device->brand_make_model ?? '—' }}</td>
                     <td>{{ $device->serial_number_asset_tag ?? '—' }}</td>
                     <td>{{ $device->physical_condition_on_receipt ?? '—' }}</td>
+                    <td class="text-sm">
+                        @if($device->hasOwnSenderInfo())
+                            {{ $device->depot_name }}
+                            @if($device->department)<br><span class="text-muted">{{ $device->department }}</span>@endif
+                        @else
+                            <span class="text-muted">Same as {{ $workshop->depot_name }}</span>
+                        @endif
+                    </td>
                     <td>
                         @if($device->status === 'Collected')
                             <span class="badge" style="background:#ede9fe;color:#6d28d9;border:1px solid #ddd6fe;font-weight:700;">Collected</span>

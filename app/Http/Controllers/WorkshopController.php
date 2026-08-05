@@ -216,6 +216,13 @@ class WorkshopController extends Controller
             'additional_devices.*.brand_make_model'       => 'required|string|max:150',
             'additional_devices.*.serial_number_asset_tag' => 'required|string|max:100',
             'additional_devices.*.physical_condition_on_receipt' => 'required|string|max:200',
+            // Sender Information per additional device is optional — left blank means
+            // "same depot as Device 1", which is why every one of these is nullable.
+            'additional_devices.*.depot_name'             => 'nullable|string|max:100',
+            'additional_devices.*.final_depot'            => 'nullable|string|max:100',
+            'additional_devices.*.department'             => 'nullable|string|max:100',
+            'additional_devices.*.contact_person'         => 'nullable|digits:4',
+            'additional_devices.*.phone_number'           => 'nullable|string|max:20',
         ]);
 
         $user = auth()->user();
@@ -258,13 +265,25 @@ class WorkshopController extends Controller
         }
 
         foreach ($request->input('additional_devices', []) as $device) {
+            // Blank Sender Information fields mean "same depot as Device 1" — left null here
+            // so the job's own Sender Information is used as the fallback when displayed.
             $extra = WorkshopJobDevice::create([
                 'workshop_equipment_register_id' => $job->id,
                 'equipment_type'                 => $device['equipment_type'],
                 'brand_make_model'                => $device['brand_make_model'],
                 'serial_number_asset_tag'         => $device['serial_number_asset_tag'],
                 'physical_condition_on_receipt'   => $device['physical_condition_on_receipt'],
+                'depot_name'                      => ($device['depot_name'] ?? null) ?: null,
+                'final_depot'                      => ($device['final_depot'] ?? null) ?: null,
+                'department'                       => ($device['department'] ?? null) ?: null,
+                'contact_person'                   => ($device['contact_person'] ?? null) ?: null,
+                'phone_number'                     => ($device['phone_number'] ?? null) ?: null,
             ]);
+
+            if ($extra->hasOwnSenderInfo()) {
+                Depot::rememberIfNew($extra->depot_name);
+                Depot::rememberIfNew($extra->final_depot);
+            }
 
             EquipmentHistory::record(
                 'serial_number', $extra->serial_number_asset_tag,

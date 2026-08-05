@@ -107,6 +107,34 @@
                             <input type="text" class="form-control device-condition" placeholder="e.g. Good, Damaged, Cracked screen" required>
                         </div>
                     </div>
+
+                    <label style="display:flex;align-items:center;gap:6px;font-size:.85rem;color:#475569;margin:10px 0;cursor:pointer;">
+                        <input type="checkbox" class="device-same-sender" checked style="width:16px;height:16px;">
+                        Same Sender Information as Device 1 (same depot)
+                    </label>
+
+                    <div class="device-sender-fields form-row" style="display:none;">
+                        <div class="form-group">
+                            <label class="form-label">Depot Name</label>
+                            <input type="text" class="form-control device-depot-name" list="depot-suggestions" autocomplete="off">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Final Depot <span style="color:#94a3b8;font-weight:400;">(if heading elsewhere after repair)</span></label>
+                            <input type="text" class="form-control device-final-depot" placeholder="Leave blank to return to Depot Name above" list="depot-suggestions" autocomplete="off">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Department</label>
+                            <input type="text" class="form-control device-department">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Extension Number</label>
+                            <input type="text" class="form-control device-contact-person" placeholder="e.g. 1205" maxlength="4" pattern="\d{4}" inputmode="numeric" title="Enter a 4-digit extension number">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Phone Number</label>
+                            <input type="text" class="form-control device-phone-number">
+                        </div>
+                    </div>
                 </div>
             </template>
 
@@ -351,6 +379,20 @@
         });
     }
 
+    // A device defaults to "same depot as Device 1" (fields hidden, nothing submitted for
+    // them). Unchecking reveals its own Sender Information for that specific device.
+    function attachSenderToggle(row) {
+        const checkbox = row.querySelector('.device-same-sender');
+        const fields    = row.querySelector('.device-sender-fields');
+
+        checkbox.addEventListener('change', function () {
+            fields.style.display = checkbox.checked ? 'none' : '';
+            if (checkbox.checked) {
+                fields.querySelectorAll('input').forEach(el => el.value = '');
+            }
+        });
+    }
+
     addDeviceBtn.addEventListener('click', function () {
         const idx  = additionalIndex++;
         const node = template.content.cloneNode(true);
@@ -360,6 +402,11 @@
         row.querySelector('.device-brand').name     = 'additional_devices[' + idx + '][brand_make_model]';
         row.querySelector('.device-serial').name    = 'additional_devices[' + idx + '][serial_number_asset_tag]';
         row.querySelector('.device-condition').name = 'additional_devices[' + idx + '][physical_condition_on_receipt]';
+        row.querySelector('.device-depot-name').name      = 'additional_devices[' + idx + '][depot_name]';
+        row.querySelector('.device-final-depot').name     = 'additional_devices[' + idx + '][final_depot]';
+        row.querySelector('.device-department').name      = 'additional_devices[' + idx + '][department]';
+        row.querySelector('.device-contact-person').name  = 'additional_devices[' + idx + '][contact_person]';
+        row.querySelector('.device-phone-number').name    = 'additional_devices[' + idx + '][phone_number]';
 
         row.querySelector('.remove-device-btn').addEventListener('click', function () {
             row.remove();
@@ -369,6 +416,7 @@
         devicesContainer.appendChild(row);
         renumberLabels();
         attachDeviceLookup(devicesContainer.lastElementChild);
+        attachSenderToggle(devicesContainer.lastElementChild);
     });
 
     attachDeviceLookup(devicesContainer.querySelector('.device-row'));
