@@ -185,11 +185,18 @@ class WorkshopController extends Controller
         ]);
     }
 
+    public const DEPARTMENTS = [
+        'Computer', 'Systems', 'Operations', 'Finance', 'Transport and Logistics',
+        'Coperate Secretary', 'Business Development', 'Procurement', 'Human Resources',
+        'Registry', 'Executive', 'Risk', 'Audit',
+    ];
+
     public function create()
     {
         $technicians = User::where('role', 'technician')->get();
         $depots = Depot::names();
-        return view('workshop.create', compact('technicians', 'depots'));
+        $departments = self::DEPARTMENTS;
+        return view('workshop.create', compact('technicians', 'depots', 'departments'));
     }
 
     public function store(Request $request)

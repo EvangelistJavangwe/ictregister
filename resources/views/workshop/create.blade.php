@@ -126,7 +126,12 @@
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Department</label>
-                                <input type="text" class="form-control device-department">
+                                <select class="form-control device-department">
+                                    <option value="">— Select Department —</option>
+                                    @foreach($departments as $dept)
+                                    <option value="{{ $dept }}">{{ $dept }}</option>
+                                    @endforeach
+                                </select>
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Extension Number</label>
@@ -161,7 +166,12 @@
                 </datalist>
                 <div class="form-group">
                     <label class="form-label">Department *</label>
-                    <input type="text" name="department" class="form-control @error('department') is-invalid @enderror" value="{{ old('department') }}" required>
+                    <select name="department" class="form-control @error('department') is-invalid @enderror" required>
+                        <option value="">— Select Department —</option>
+                        @foreach($departments as $dept)
+                        <option value="{{ $dept }}" {{ old('department') === $dept ? 'selected' : '' }}>{{ $dept }}</option>
+                        @endforeach
+                    </select>
                     @error('department')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
                 <div class="form-group">
