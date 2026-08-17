@@ -139,6 +139,22 @@
             .content { padding: 16px; }
             .topbar { padding: 0 16px; }
         }
+
+        /* Responsive tables: stack into cards instead of scrolling sideways */
+        @media (max-width: 900px) {
+            .table-wrap { overflow-x: hidden; }
+            table.responsive-table thead { display: none; }
+            table.responsive-table, table.responsive-table tbody,
+            table.responsive-table tr, table.responsive-table td { display: block; width: 100%; }
+            table.responsive-table tr { margin-bottom: 12px; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; }
+            table.responsive-table tr:last-child { margin-bottom: 0; }
+            table.responsive-table td { display: flex; align-items: center; justify-content: space-between; gap: 12px; text-align: right; white-space: normal; border-bottom: 1px solid #f1f5f9; }
+            table.responsive-table td:last-child { border-bottom: none; }
+            table.responsive-table td::before { content: attr(data-label); font-weight: 600; color: #475569; text-align: left; font-size: .72rem; text-transform: uppercase; letter-spacing: .03em; flex-shrink: 0; }
+            table.responsive-table td[data-label=""], table.responsive-table td:not([data-label]) { justify-content: flex-end; }
+            table.responsive-table td.responsive-full { display: block; text-align: center; }
+            table.responsive-full::before { content: none; }
+        }
         .divider { border: none; border-top: 1px solid #e2e8f0; margin: 16px 0; }
         .overdue-row td { background: #fff7ed !important; }
 

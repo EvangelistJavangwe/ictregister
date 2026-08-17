@@ -36,7 +36,7 @@
 
 <div class="card">
     <div class="table-wrap">
-        <table>
+        <table class="responsive-table">
             <thead>
                 <tr>
                     <th>Source</th><th>Ref No.</th><th>Item / Equipment</th><th>Serial / Asset Tag</th>
@@ -46,24 +46,24 @@
             <tbody>
             @forelse($rows as $row)
             <tr>
-                <td>
+                <td data-label="Source">
                     @if($row->source === 'Workshop')
                         <span class="badge badge-info"><i class="fas fa-tools" style="font-size:.65rem;margin-right:3px;"></i>Workshop</span>
                     @else
                         <span class="badge" style="background:#f3e8ff;color:#7c3aed;border:1px solid #ddd6fe;font-weight:700;"><i class="fas fa-box-open" style="font-size:.65rem;margin-right:3px;"></i>Registry</span>
                     @endif
                 </td>
-                <td><strong>{{ $row->ref }}</strong></td>
-                <td>{{ $row->item }}<br><small class="text-muted">{{ $row->brand }}</small></td>
-                <td class="text-sm">{{ $row->serial ?? '—' }}</td>
-                <td class="text-sm">{{ $row->status }}</td>
-                <td style="text-align:center;font-weight:700;color:#0891b2;">{{ $row->available ?? '—' }}</td>
-                <td class="text-sm">{{ $row->handler ?? '—' }}</td>
-                <td class="text-sm">{{ $row->date?->format('d M Y') ?? '—' }}</td>
-                <td><a href="{{ route($row->view_route, $row->view_id) }}" class="btn btn-sm btn-primary">View</a></td>
+                <td data-label="Ref No."><strong>{{ $row->ref }}</strong></td>
+                <td data-label="Item / Equipment">{{ $row->item }}<br><small class="text-muted">{{ $row->brand }}</small></td>
+                <td class="text-sm" data-label="Serial / Asset Tag">{{ $row->serial ?? '—' }}</td>
+                <td class="text-sm" data-label="Status">{{ $row->status }}</td>
+                <td style="text-align:center;font-weight:700;color:#0891b2;" data-label="Available">{{ $row->available ?? '—' }}</td>
+                <td class="text-sm" data-label="Technician / Supplier">{{ $row->handler ?? '—' }}</td>
+                <td class="text-sm" data-label="Date">{{ $row->date?->format('d M Y') ?? '—' }}</td>
+                <td data-label="Actions"><a href="{{ route($row->view_route, $row->view_id) }}" class="btn btn-sm btn-primary">View</a></td>
             </tr>
             @empty
-            <tr><td colspan="9" class="text-center text-muted" style="padding:30px;">No equipment found.</td></tr>
+            <tr><td colspan="9" class="text-center text-muted responsive-full" style="padding:30px;">No equipment found.</td></tr>
             @endforelse
             </tbody>
         </table>

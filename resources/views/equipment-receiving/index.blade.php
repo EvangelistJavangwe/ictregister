@@ -48,7 +48,7 @@
 
 <div class="card">
     <div class="table-wrap">
-        <table>
+        <table class="responsive-table">
             <thead>
                 <tr>
                     <th>Ref No.</th>
@@ -76,19 +76,19 @@
                 $status        = $record->stockStatus();
             @endphp
             <tr>
-                <td><a href="{{ route('equipment-receiving.show', $record) }}" style="font-weight:700;color:#2563eb;text-decoration:none;">{{ $record->cross_ref_no }}</a></td>
-                <td class="text-sm">{{ $record->date_received?->format('d M Y') }}</td>
-                <td class="text-sm">{{ $record->supplier }}</td>
-                <td>
+                <td data-label="Ref No."><a href="{{ route('equipment-receiving.show', $record) }}" style="font-weight:700;color:#2563eb;text-decoration:none;">{{ $record->cross_ref_no }}</a></td>
+                <td class="text-sm" data-label="Date">{{ $record->date_received?->format('d M Y') }}</td>
+                <td class="text-sm" data-label="Supplier">{{ $record->supplier }}</td>
+                <td data-label="Item Description">
                     {{ $record->item_description }}
                     @if($record->brand_model)<br><small class="text-muted">{{ $record->brand_model }}</small>@endif
                 </td>
-                <td class="text-sm">{{ $record->serial_number ?? '—' }}</td>
-                <td style="text-align:center;font-weight:700;color:#2563eb;">{{ $qty }}</td>
-                <td style="text-align:center;font-weight:700;color:#16a34a;">{{ $inspected }}</td>
-                <td style="text-align:center;font-weight:700;color:#7c3aed;">{{ $redistributed }}</td>
-                <td style="text-align:center;font-weight:700;color:{{ $available > 0 ? '#0891b2' : '#94a3b8' }};font-size:1rem;">{{ $available }}</td>
-                <td>
+                <td class="text-sm" data-label="Serial No.">{{ $record->serial_number ?? '—' }}</td>
+                <td style="text-align:center;font-weight:700;color:#2563eb;" data-label="Received">{{ $qty }}</td>
+                <td style="text-align:center;font-weight:700;color:#16a34a;" data-label="Inspected">{{ $inspected }}</td>
+                <td style="text-align:center;font-weight:700;color:#7c3aed;" data-label="Redistributed">{{ $redistributed }}</td>
+                <td style="text-align:center;font-weight:700;color:{{ $available > 0 ? '#0891b2' : '#94a3b8' }};font-size:1rem;" data-label="Available">{{ $available }}</td>
+                <td data-label="Stock Status">
                     @if($status === 'Fully Inspected')
                         <span class="badge badge-success"><i class="fas fa-check-double"></i> Fully Inspected</span>
                     @elseif($status === 'Partially Inspected')
@@ -97,7 +97,7 @@
                         <span class="badge badge-secondary">Pending</span>
                     @endif
                 </td>
-                <td>
+                <td data-label="Warranty">
                     @if(!$record->warranty_end_date)
                         <span class="badge badge-secondary" style="font-size:.7rem;">No Warranty</span>
                     @elseif($record->warrantyStatus() === 'expired')
@@ -108,7 +108,7 @@
                         <span class="badge badge-success" style="font-size:.7rem;" title="Expires {{ $record->warranty_end_date->format('d M Y') }}"><i class="fas fa-shield-alt"></i> Active</span>
                     @endif
                 </td>
-                <td>
+                <td data-label="Actions">
                     <div class="d-flex gap-2">
                         <a href="{{ route('equipment-receiving.show', $record) }}" class="btn btn-sm btn-primary" title="View"><i class="fas fa-eye"></i></a>
                         @if($pending > 0)
@@ -119,7 +119,7 @@
                 </td>
             </tr>
             @empty
-            <tr><td colspan="12" class="text-center text-muted" style="padding:32px;">No records found.</td></tr>
+            <tr><td colspan="12" class="text-center text-muted responsive-full" style="padding:32px;">No records found.</td></tr>
             @endforelse
             </tbody>
         </table>
