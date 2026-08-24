@@ -35,6 +35,9 @@
     <strong>Filters applied:</strong>
     @if(!empty($filters['status'])) <span>Stock Status: <strong>{{ $filters['status'] }}</strong></span> @endif
     @if(!empty($filters['search'])) <span>Search: <strong>{{ $filters['search'] }}</strong></span> @endif
+    @if(!empty($filters['supplier'])) <span>Supplier: <strong>{{ $filters['supplier'] }}</strong></span> @endif
+    @if(!empty($filters['date_from'])) <span>From: <strong>{{ $filters['date_from'] }}</strong></span> @endif
+    @if(!empty($filters['date_to'])) <span>To: <strong>{{ $filters['date_to'] }}</strong></span> @endif
 </div>
 @endif
 

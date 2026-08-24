@@ -40,8 +40,27 @@ class EquipmentReceivingController extends Controller
             });
         }
 
+        if ($request->filled('supplier')) {
+            $query->where('supplier', $request->supplier);
+        }
+
+        if ($request->filled('date_from')) {
+            $query->whereDate('date_received', '>=', $request->date_from);
+        }
+
+        if ($request->filled('date_to')) {
+            $query->whereDate('date_received', '<=', $request->date_to);
+        }
+
         $records = $query->latest()->paginate(15);
-        return view('equipment-receiving.index', compact('records'));
+
+        $suppliers = EquipmentReceivingRegister::whereNotNull('supplier')
+            ->where('supplier', '!=', '')
+            ->distinct()
+            ->orderBy('supplier')
+            ->pluck('supplier');
+
+        return view('equipment-receiving.index', compact('records', 'suppliers'));
     }
 
     public function create()

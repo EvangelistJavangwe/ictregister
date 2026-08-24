@@ -24,6 +24,23 @@
             <option value="inspected" {{ request('status')==='inspected'  ? 'selected' : '' }}>Fully Inspected</option>
         </select>
     </div>
+    <div class="form-group">
+        <label class="form-label">Supplier</label>
+        <select name="supplier" class="form-control">
+            <option value="">All</option>
+            @foreach($suppliers as $supplier)
+            <option value="{{ $supplier }}" {{ request('supplier')===$supplier ? 'selected' : '' }}>{{ $supplier }}</option>
+            @endforeach
+        </select>
+    </div>
+    <div class="form-group">
+        <label class="form-label">Date Received From</label>
+        <input type="date" name="date_from" class="form-control" value="{{ request('date_from') }}">
+    </div>
+    <div class="form-group">
+        <label class="form-label">Date Received To</label>
+        <input type="date" name="date_to" class="form-control" value="{{ request('date_to') }}">
+    </div>
     <div class="form-group" style="align-self:flex-end;display:flex;gap:6px;flex-wrap:wrap;">
         <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i> Filter</button>
         <a href="{{ route('equipment-receiving.index') }}" class="btn btn-secondary">Clear</a>

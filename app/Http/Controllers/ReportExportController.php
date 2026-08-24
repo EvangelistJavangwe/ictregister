@@ -169,11 +169,23 @@ class ReportExportController extends Controller
                 ->orWhere('serial_number', 'like', "%{$q}%"));
         }
 
+        if ($request->filled('supplier')) {
+            $query->where('supplier', $request->supplier);
+        }
+
+        if ($request->filled('date_from')) {
+            $query->whereDate('date_received', '>=', $request->date_from);
+        }
+
+        if ($request->filled('date_to')) {
+            $query->whereDate('date_received', '<=', $request->date_to);
+        }
+
         $data    = $query->latest()->get();
         $format  = $request->input('format', 'csv');
         $file    = 'equipment-receiving-' . now()->format('Y-m-d');
         $title   = 'ICT Equipment Receiving, Inspection & Transfer Register';
-        $filters = $request->only(['status', 'search']);
+        $filters = $request->only(['status', 'search', 'supplier', 'date_from', 'date_to']);
 
         return match ($format) {
             'csv'   => $this->csvDownload($data, $this->receivingHeaders(), fn($r) => $this->receivingRow($r), $file),
