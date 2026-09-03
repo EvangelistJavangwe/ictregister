@@ -10,11 +10,16 @@ use RuntimeException;
 
 class RunAutomaticBackup extends Command
 {
-    protected $signature = 'ict:auto-backup';
+    protected $signature = 'ict:auto-backup {--only-if-missed : Skip if today\'s scheduled backup already ran (used for the VM-startup catch-up trigger)}';
     protected $description = 'Create a database backup, upload it to SharePoint, and keep a local copy as a fallback';
 
     public function handle(BackupService $backup, SharePointBackupService $sharePoint): void
     {
+        if ($this->option('only-if-missed') && $this->alreadyRanToday()) {
+            $this->info('Today\'s automatic backup already ran — skipping catch-up.');
+            return;
+        }
+
         try {
             [$path, $filename] = $backup->createDump();
         } catch (RuntimeException $e) {
@@ -42,7 +47,7 @@ class RunAutomaticBackup extends Command
                 'badge_status' => 'success',
             ]);
             $this->info("Backup created and uploaded to SharePoint: {$filename}");
-        } catch (RuntimeException $e) {
+        } catch (\Throwable $e) {
             AuditTrail::create([
                 'username'     => 'System',
                 'action'       => 'backup',
@@ -53,5 +58,14 @@ class RunAutomaticBackup extends Command
             ]);
             $this->warn("Backup kept locally ({$filename}); SharePoint upload failed: " . $e->getMessage());
         }
+    }
+
+    /** True if today's midnight schedule already fired (success, warning, or failed — it still ran). */
+    private function alreadyRanToday(): bool
+    {
+        return AuditTrail::where('action', 'backup')
+            ->where('module', 'Scheduler')
+            ->whereDate('created_at', now()->toDateString())
+            ->exists();
     }
 }
