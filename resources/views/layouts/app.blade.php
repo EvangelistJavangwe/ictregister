@@ -57,9 +57,11 @@
         /* Table */
         .table-wrap { overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; font-size: .875rem; }
-        th { background: #f8fafc; color: #475569; font-weight: 600; padding: 10px 14px; text-align: left; border-bottom: 2px solid #e2e8f0; white-space: nowrap; }
-        td { padding: 10px 14px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
-        tr:hover td { background: #f8fafc; }
+        th { background: #f8fafc; color: #64748b; font-weight: 600; font-size: .72rem; text-transform: uppercase; letter-spacing: .04em; padding: 12px 14px; text-align: left; border-bottom: 2px solid #e2e8f0; white-space: nowrap; }
+        td { padding: 12px 14px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+        tbody tr:nth-child(even) td { background: #fafbfc; }
+        tr:hover td { background: #f1f5f9; }
+        td.text-truncate { max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
         /* Badges */
         .badge { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 12px; font-size: .72rem; font-weight: 600; white-space: nowrap; }
@@ -81,6 +83,8 @@
         .btn-warning:hover { background: #b45309; }
         .btn-danger { background: #dc2626; color: #fff; }
         .btn-danger:hover { background: #b91c1c; }
+        .btn-info { background: #0284c7; color: #fff; }
+        .btn-info:hover { background: #0369a1; }
         .btn-secondary { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
         .btn-secondary:hover { background: #e2e8f0; }
         .btn-outline { background: transparent; border: 1px solid #e2e8f0; color: #475569; }

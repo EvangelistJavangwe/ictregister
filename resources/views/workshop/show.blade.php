@@ -20,10 +20,12 @@
         </div>
     </div>
     <div class="d-flex gap-2">
-        @if(auth()->user()->isAdminOrHod())
+        @if($workshop->technician_assigned !== auth()->id())
         <form method="POST" action="{{ route('workshop.assign-self', $workshop) }}">
             @csrf
-            <button type="submit" class="btn btn-secondary"><i class="fas fa-user-check"></i> Assign to Me</button>
+            <button type="submit" class="btn btn-secondary" data-confirm="{{ $workshop->technician ? 'Take over this job from ' . $workshop->technician->firstname . '?' : 'Assign this job to yourself?' }}">
+                <i class="fas fa-user-check"></i> {{ $workshop->technician ? 'Take Over Job' : 'Assign to Me' }}
+            </button>
         </form>
         @endif
         <a href="{{ route('workshop.edit', $workshop) }}" class="btn btn-primary"><i class="fas fa-edit"></i> Update</a>

@@ -38,12 +38,10 @@ class WorkshopController extends Controller
 
     public function index(Request $request)
     {
-        $user = auth()->user();
         $query = WorkshopEquipmentRegister::with('technician', 'creator');
 
-        if ($user->isTechnician()) {
-            $query->where('technician_assigned', $user->id);
-        }
+        // Technicians see every job (not just their own) so anyone can pick up and
+        // continue a colleague's work — see the 'technician' filter below to narrow it.
 
         if ($request->filled('status')) {
             $query->where('status', $request->status);
@@ -86,9 +84,6 @@ class WorkshopController extends Controller
 
         // Status counts (unfiltered by status so the summary always shows totals)
         $baseQuery = WorkshopEquipmentRegister::query();
-        if ($user->isTechnician()) {
-            $baseQuery->where('technician_assigned', $user->id);
-        }
         $statusCounts = (clone $baseQuery)->selectRaw('status, count(*) as total')
             ->groupBy('status')
             ->pluck('total', 'status');
@@ -436,8 +431,9 @@ class WorkshopController extends Controller
 
     public function assignSelf(WorkshopEquipmentRegister $workshop)
     {
+        // Any authenticated technician, hod, or super_admin may take over a job —
+        // this is how a technician picks up and continues a colleague's work.
         $user = auth()->user();
-        if (!$user->isAdminOrHod()) abort(403);
 
         $workshop->update([
             'technician_assigned' => $user->id,

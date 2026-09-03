@@ -90,7 +90,6 @@
             @endforeach
         </select>
     </div>
-    @if(auth()->user()->isAdminOrHod())
     <div class="form-group">
         <label class="form-label">Technician</label>
         <select name="technician" class="form-control">
@@ -100,7 +99,6 @@
             @endforeach
         </select>
     </div>
-    @endif
     <div class="form-group" style="align-self:flex-end;display:flex;gap:6px;flex-wrap:wrap;">
         <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i> Filter</button>
         <a href="{{ route('workshop.index') }}" class="btn btn-secondary">Clear</a>
